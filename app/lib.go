@@ -1,9 +1,8 @@
-// A sample front page to get started
-package root
+// Methods and datastructures that support the application
+package app
 
 import (
 	"appengine"
-	"fmt"
 	"html/template"
 	"net/http"
 )
@@ -11,7 +10,7 @@ import (
 // Information we feed to the render template
 type Page struct {
 	Title   string
-	Content string
+	Content template.HTML
 }
 
 // Dignified error handling
@@ -19,11 +18,6 @@ type appError struct {
 	Error   error
 	Message string
 	Code    int
-}
-
-// Get started with AppEngine
-func init() {
-	http.Handle("/", appHandler(root))
 }
 
 // http.Handle doesn't expect you to return an error, but we want to surface them
@@ -54,17 +48,6 @@ func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // Check errors, panic if we have an error
 func check(err error, message string) { if err != nil { panic(&appError{err, message, 500} ) } }
-
-// Show the front page
-func root(w http.ResponseWriter, r *http.Request) {
-	p := setup(w, r)
-	
-	p.Content = fmt.Sprintf("%s", "<h1>TrypUp: travel, democratized</h1>")
-	t, err := template.ParseFiles("root/view/index.html")
-	check(err, "Could not parse template.")
-	
-	t.Execute(w, p)
-}
 
 // Make sure we're ready to go, with Content-Type and more
 func setup(w http.ResponseWriter, r *http.Request) *Page {
