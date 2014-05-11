@@ -6,7 +6,7 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>{{.Title}}</title>
+        <title>TrypUp: travel, democratized</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -23,7 +23,17 @@
 
         <!-- Add your site or application content here -->
         
-        {{.Content}}
+        <h1>TrypUp: travel, democratized</h1>
+        
+        {{range .}}
+            <div class="item" id="i{{.Id}}">
+                <span class="score">{{.Score}}</span>
+                <a href="/share/{{.Id}}/{{.URLTitle}}">{{.Title}}</a>
+                <span class="attribution">(<span class="upv">{{.Upvotes}}</span>|<span class="downv">{{.Downvotes}}</span>) submitted by <a href="/user/{{.Owner.Username}}">{{.Owner.Username}}</a><span>
+                <span class="tools">{{ len .Comments }} comments</span>
+            </div>
+        {{end}}
+        
 
 	<footer>&copy; Jack Hardcastle 2014</footer>
 

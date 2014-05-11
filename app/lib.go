@@ -5,6 +5,7 @@ import (
 	"appengine"
 	"html/template"
 	"net/http"
+	"time"
 )
 
 // Information we feed to the render template
@@ -18,6 +19,36 @@ type appError struct {
 	Error   error
 	Message string
 	Code    int
+}
+
+type Item struct {
+	Title		string
+	Description	string
+	Id			uint
+	Lat			float32
+	Long		float32
+	URLTitle	string
+	Comments	[]*Comment
+	DateCreated	time.Time
+	Owner		User
+	Score		int
+	Upvotes		int
+	Downvotes	int
+}
+
+type Comment struct {
+	Owner		User
+	Body		string
+	Children	[]*Comment
+	DateCreated	time.Time
+	Parent		*Comment
+}
+
+type User struct {
+	Username		string
+	PasswordHash	string
+	Id				uint
+	DateCreated		time.Time
 }
 
 // http.Handle doesn't expect you to return an error, but we want to surface them
@@ -44,6 +75,10 @@ func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}  
 	} ()
 	fn(w,r)
+}
+
+func (fn Item) string(i Item) string {
+	return i.Title
 }
 
 // Check errors, panic if we have an error
