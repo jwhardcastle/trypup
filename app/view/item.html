@@ -1,0 +1,17 @@
+{{ template "header" }}
+        <div class="item" id="i{{.Id}}">
+            <span class="score">{{.Score}}</span>
+            <a href="/share/{{.Id}}/{{.URLTitle}}">{{.Title}}</a>
+            <span class="attribution">(<span class="upv">{{.Upvotes}}</span>|<span class="downv">{{.Downvotes}}</span>) submitted by <a href="/user/{{.Owner.Username}}">{{.Owner.Username}}</a><span>
+            <span class="tools">{{ .CommentCount }} comments</span>
+        </div>
+        
+        <div class="comments">
+            {{ with .Comments }}
+                {{ range . }}
+                    {{ template "comment" . }}
+                {{ end }}
+            {{ end }}
+        </div>
+
+{{ template "footer" }}

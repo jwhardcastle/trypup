@@ -8,12 +8,6 @@ import (
 	"time"
 )
 
-// Information we feed to the render template
-type Page struct {
-	Title   string
-	Content template.HTML
-}
-
 // Dignified error handling
 type appError struct {
 	Error   error
@@ -21,6 +15,7 @@ type appError struct {
 	Code    int
 }
 
+// An item is an activity, place, restaurant, or point of interest that has been shared
 type Item struct {
 	Title		string
 	Description	string
@@ -34,16 +29,23 @@ type Item struct {
 	Score		int
 	Upvotes		int
 	Downvotes	int
+	CommentCount int
 }
 
+// Comments belong to items, or to other comments; all comments must reference the root Item regardless
 type Comment struct {
 	Owner		User
 	Body		string
 	Children	[]*Comment
 	DateCreated	time.Time
 	Parent		*Comment
+	Item		*Item
+	Score		int
+	Upvotes		int
+	Downvotes	int
 }
 
+// Users log in to vote, share, and leave comments
 type User struct {
 	Username		string
 	PasswordHash	string
@@ -85,7 +87,18 @@ func (fn Item) string(i Item) string {
 func check(err error, message string) { if err != nil { panic(&appError{err, message, 500} ) } }
 
 // Make sure we're ready to go, with Content-Type and more
-func setup(w http.ResponseWriter, r *http.Request) *Page {
+func setup(w http.ResponseWriter, r *http.Request) *template.Template {
 	w.Header().Set("Content-Type", "text/html")
-	return &Page{Title: "TrypUp: travel, democratized", Content: ""}
+
+	templates, err := template.ParseFiles(
+		"app/view/header.html",
+		"app/view/footer.html",
+		"app/view/index.html",
+		"app/view/item.html",
+		"app/view/comment.html",
+		"app/view/user.html",
+	)
+	check(err, "Could not process templates.")
+
+	return templates
 }

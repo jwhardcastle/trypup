@@ -1,0 +1,13 @@
+{{ define "comment" }}
+	<div class="comment">
+	    <a href="#" class="collapse">[-]</a>
+	    <a href="/user/{{.Owner.Username}}">{{.Owner.Username}}</a>
+	    {{ .Score }} points (<span class="upv">{{.Upvotes}}</span>|<span class="downv">{{.Downvotes}}</span>)
+	    <div class="body">{{ .Body }}</div>
+	    {{ with .Children }} 
+	    	{{ range .}}
+	    		{{template "comment" .}}
+	    	{{ end }}
+	    {{ end }}
+	</div>
+{{ end }}
