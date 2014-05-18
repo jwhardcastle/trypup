@@ -1,3 +1,78 @@
+
+#map {
+	float: right;
+	width: 45%;
+	height: 25em;
+}
+
+.comments {
+	margin-left: 1em;
+	margin-top: 1em;
+}
+
 .comment .comment {
 	margin-left: 3em;
+	margin-top: 1em;
+}
+
+.comment {
+	margin-bottom: 1.5em;
+}
+
+.item.highlight {
+	background-color: #ffc;
+}
+
+.item {
+	overflow: hidden;
+	padding: 0.7em 0.5em;
+}
+
+.item .score {
+	font-size: 110%;
+	display: block;
+	float: left;
+	margin-right: 0.5em;
+}
+
+.item .score > * {
+	display: block;
+	text-align: center;
+}
+
+.item .score a:link {
+	text-decoration: none;
+	color: #999;
+	line-height: 0.8;
+	font-size: 150%;
+}
+
+.item .title {
+	font-weight: bold;
+	font-size: 120%;
+	line-height: 1.6;
+	display: block;
+	float: left;
+}
+
+.item .details {
+	overflow: hidden;
+}
+
+.item .attribution {
+	font-size: 90%;
+	display: block;
+	clear: both;
+}
+
+.item .attribution .upv, .item .attribution .downv {
+	padding: 0 0.2em;
+}
+
+.item .attribution .upv {
+	color: #6c6;
+}
+
+.item .attribution .downv {
+	color: #c66;
 }

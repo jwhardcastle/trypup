@@ -82,6 +82,8 @@ func dummyData() ([]Item, []User) {
 		Lat: 39.273556,
 		Long: -76.601806,
 		CommentCount: 2,
+		Color: "cadetblue",
+		Icon: "truck",
 	}
 	i2 := Item{
 		Title: "OPACY: Oriole Park at Camden Yards, Home of the Baltimore Orioles",
@@ -95,6 +97,8 @@ func dummyData() ([]Item, []User) {
 		Lat: 39.283501,
 		Long: -76.6219798,
 		CommentCount: 1,
+		Color: "orange",
+		Icon: "sun-o",
 	}
 
 	items := []Item{i1,i2}

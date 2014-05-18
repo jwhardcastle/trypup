@@ -1,4 +1,4 @@
-{{ define "comment" }}
+{{ define "_comment" }}
 	<div class="comment">
 	    <a href="#" class="collapse">[-]</a>
 	    <a href="/user/{{.Owner.Username}}">{{.Owner.Username}}</a>
@@ -6,7 +6,7 @@
 	    <div class="body">{{ .Body }}</div>
 	    {{ with .Children }} 
 	    	{{ range .}}
-	    		{{template "comment" .}}
+	    		{{template "_comment" .}}
 	    	{{ end }}
 	    {{ end }}
 	</div>

@@ -23,6 +23,8 @@ type Item struct {
 	Lat			float32
 	Long		float32
 	URLTitle	string
+	Icon		string
+	Color		string		
 	Comments	[]*Comment
 	DateCreated	time.Time
 	Owner		User
@@ -95,7 +97,8 @@ func setup(w http.ResponseWriter, r *http.Request) *template.Template {
 		"app/view/footer.html",
 		"app/view/index.html",
 		"app/view/item.html",
-		"app/view/comment.html",
+		"app/view/_comment.html",
+		"app/view/_item.html",
 		"app/view/user.html",
 	)
 	check(err, "Could not process templates.")
