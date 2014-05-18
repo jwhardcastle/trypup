@@ -1,12 +1,17 @@
 {{ template "header" }}
         
+	<div id="map" style="width: 800px; height: 400px;"></div>
         {{range .}}
-            <div class="item" id="i{{.Id}}">
+            <div class="item" id="i{{.Id}}" data-lat="{{.Lat}}" data-long="{{.Long}}">
                 <span class="score">{{.Score}}</span>
-                <a href="/share/{{.Id}}/{{.URLTitle}}">{{.Title}}</a>
+                <a class="title" href="/share/{{.Id}}/{{.URLTitle}}">{{.Title}}</a>
                 <span class="attribution">(<span class="upv">{{.Upvotes}}</span>|<span class="downv">{{.Downvotes}}</span>) submitted by <a href="/user/{{.Owner.Username}}">{{.Owner.Username}}</a><span>
                 <span class="tools">{{ .CommentCount }} comments</span>
             </div>
         {{end}}
+
+	<script>
+		// create a map in the "map" div, set the view to a given place and zoom
+	</script>
         
 {{ template "footer" }}
