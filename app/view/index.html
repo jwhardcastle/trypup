@@ -1,9 +1,11 @@
 {{ template "header" }}
         
 	<div id="map"></div>
-	{{range .}}
-		{{ template "_item" . }}
-	{{end}}
+		
+		{{range .}}
+			{{ template "_item" . }}
+		{{end}}
+	
 	</div>
 
 	<script>

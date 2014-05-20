@@ -5,7 +5,7 @@ import (
 	"appengine"
 	"html/template"
 	"net/http"
-	"time"
+	"math"
 )
 
 // Dignified error handling
@@ -13,46 +13,6 @@ type appError struct {
 	Error   error
 	Message string
 	Code    int
-}
-
-// An item is an activity, place, restaurant, or point of interest that has been shared
-type Item struct {
-	Title		string
-	Description	string
-	Id			uint
-	Lat			float32
-	Long		float32
-	URLTitle	string
-	Icon		string
-	Color		string		
-	Comments	[]*Comment
-	DateCreated	time.Time
-	Owner		User
-	Score		int
-	Upvotes		int
-	Downvotes	int
-	CommentCount int
-}
-
-// Comments belong to items, or to other comments; all comments must reference the root Item regardless
-type Comment struct {
-	Owner		User
-	Body		string
-	Children	[]*Comment
-	DateCreated	time.Time
-	Parent		*Comment
-	Item		*Item
-	Score		int
-	Upvotes		int
-	Downvotes	int
-}
-
-// Users log in to vote, share, and leave comments
-type User struct {
-	Username		string
-	PasswordHash	string
-	Id				uint
-	DateCreated		time.Time
 }
 
 // http.Handle doesn't expect you to return an error, but we want to surface them
@@ -75,21 +35,21 @@ func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				http.Error(w, "A very serious error has occurred.", 500)
 			}
-			
-		}  
-	} ()
-	fn(w,r)
-}
 
-func (fn Item) string(i Item) string {
-	return i.Title
+		}
+	}()
+	fn(w, r)
 }
 
 // Check errors, panic if we have an error
-func check(err error, message string) { if err != nil { panic(&appError{err, message, 500} ) } }
+func check(err error, message string) {
+	if err != nil {
+		panic(&appError{err, message, 500})
+	}
+}
 
 // Make sure we're ready to go, with Content-Type and more
-func setup(w http.ResponseWriter, r *http.Request) *template.Template {
+func setup(w http.ResponseWriter, r *http.Request) (*template.Template, appengine.Context) {
 	w.Header().Set("Content-Type", "text/html")
 
 	templates, err := template.ParseFiles(
@@ -103,5 +63,24 @@ func setup(w http.ResponseWriter, r *http.Request) *template.Template {
 	)
 	check(err, "Could not process templates.")
 
-	return templates
+	return templates, appengine.NewContext(r)
+}
+
+// Shamelessly stolen from Reddit, ported to Go
+func to_base(q int64, alphabet string) string {
+	l := len(alphabet) // The base
+	maxdigits := int(math.Ceil(math.Log(float64(q))/math.Log(float64(l))))
+	var buffer [64]byte 
+	var r int // remainder
+	var i int
+	for i=0 ; q != 0; i++ {
+		r = int(math.Mod(float64(q),float64(l)))
+		buffer[maxdigits-i-1]=alphabet[r]
+		q = q/int64(l)
+	}
+	return string(buffer[:i])
+}
+
+func to36(q int64) string  {
+	return to_base(q, "0123456789abcdefghijklmnopqrstuvwxyz")
 }

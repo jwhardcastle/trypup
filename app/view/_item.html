@@ -1,12 +1,12 @@
 {{ define "_item" }}
-	<div class="item" id="item{{.Id}}" data-id="{{.Id}}" data-lat="{{.Lat}}" data-long="{{.Long}}" data-color="{{.Color}}" data-icon="{{.Icon}}">
+	<div class="item" id="{{.URLID}}" data-lat="{{.Lat}}" data-long="{{.Long}}" data-color="{{.Color}}" data-icon="{{.Icon}}">
 		<div class="score">
 			<a href="#" class="upvote">&#9650;</a>
 			<span class="overall">{{.Score}}</span>
 			<a href="#" class="downvote">&#9660;</a>
 		</div>
 		<div class="details">
-			<a class="title" href="/share/{{.Id}}/{{.URLTitle}}">{{.Title}}</a>
+			<a class="title" href="/share/{{.URLID}}/{{.URLTitle}}">{{.Title}}</a>
 			<span class="attribution">(<span class="upv">{{.Upvotes}}</span>|<span class="downv">{{.Downvotes}}</span>) submitted by <a href="/user/{{.Owner.Username}}">{{.Owner.Username}}</a><span>
 			<span class="tools">{{ .CommentCount }} comments</span>
 		    </div>
