@@ -121,14 +121,4 @@ func dummyData(r *http.Request) {
 	_, err = datastore.Put(c, datastore.NewIncompleteKey(c, "Comment", nil), &c3) // The third comment is a child on the second
 	check(err, "Could not store comments in datastore.")
 
-	/*q := datastore.NewQuery("User").Order("Id")
-
-	var users []User
-	q.GetAll(c, &users)
-
-	var items []Item
-	q = datastore.NewQuery("Item").Order("-Score")
-	q.GetAll(c, &items)*/
-
-	//return items, users
 }

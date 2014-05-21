@@ -44,7 +44,6 @@ func (comment *Comment) loadOwner(c appengine.Context) {
 
 func (comment *Comment) loadChildren(c appengine.Context, recursive bool) {
 	var children []Comment
-	println("EncodedC: ", (*comment).commentKey.Encode())
 	q := datastore.NewQuery("Comment").Filter("ParentKey=", (*comment).commentKey).Order("-Score")
 	keys, err := q.GetAll(c, &children)
 	check(err, "Could not load child comments.")

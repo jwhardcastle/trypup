@@ -42,16 +42,22 @@ func ItemHandler(w http.ResponseWriter, r *http.Request) {
 	intID:=decodeID(id)
 	key := datastore.NewKey(c,"Item","",intID,nil)
 
-	q := datastore.NewQuery("Item").Filter("__key__=",key)
-	var items []Item
-	keys, err := q.GetAll(c, &items)
+	var item Item
+	err := datastore.Get(c, key, &item)
+	//var items []Item
+	//keys, err := q.GetAll(c, &items)
 	check(err, "Could not load item.")
 
+	/*
 	items[0].itemKey = keys[0]
 	items[0].loadOwner(c)
 	items[0].loadComments(c)
+	*/
+	item.itemKey = key
+	item.loadOwner(c)
+	item.loadComments(c)
 	
-	err = templates.ExecuteTemplate(w, "item.html", items[0])
+	err = templates.ExecuteTemplate(w, "item.html", item)
 	check(err, "Could not process template.")
 }
 
