@@ -16,15 +16,13 @@ type appError struct {
 }
 
 // http.Handle doesn't expect you to return an error, but we want to surface them
-type appHandler func(http.ResponseWriter, *http.Request)
+type appHandler func(appengine.Context, http.ResponseWriter, *http.Request)
 
 // Serve HTTP, and handle error messages with dignity by displaying a nice error page
-func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (fn appHandler) ServeHTTP(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if recv := recover(); recv != nil {
 			e := recv.(*appError)
-			c := appengine.NewContext(r)
-			c.Errorf("%v", e.Error)
 
 			http.StatusText(e.Code)
 			t, err := template.ParseFiles("errors/500.html")
@@ -38,7 +36,7 @@ func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		}
 	}()
-	fn(w, r)
+	fn(c, w, r)
 }
 
 // Check errors, panic if we have an error
@@ -49,7 +47,7 @@ func check(err error, message string) {
 }
 
 // Make sure we're ready to go, with Content-Type and more
-func setup(w http.ResponseWriter, r *http.Request) (*template.Template, appengine.Context) {
+func setup(w http.ResponseWriter, r *http.Request) *template.Template {
 	w.Header().Set("Content-Type", "text/html")
 
 	templates, err := template.ParseFiles(
@@ -63,7 +61,7 @@ func setup(w http.ResponseWriter, r *http.Request) (*template.Template, appengin
 	)
 	check(err, "Could not process templates.")
 
-	return templates, appengine.NewContext(r)
+	return templates
 }
 
 // Shamelessly stolen from Reddit, ported to Go

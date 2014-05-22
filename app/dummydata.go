@@ -6,8 +6,7 @@ import (
 	"net/http"
 )
 
-func dummyData(r *http.Request) {
-	c := appengine.NewContext(r)
+func dummyData(r *http.Request, c appengine.Context) {
 
 	// Start by wiping out the data we're about to populate
 	// Delete all users

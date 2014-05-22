@@ -9,15 +9,13 @@ import (
 )
 
 // Load dummy data
-func DummyHandler(w http.ResponseWriter, r *http.Request) {
-	dummyData(r)
+func DummyHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
+	dummyData(r, c)
 }
 
 // Show the front page
-func RootHandler(w http.ResponseWriter, r *http.Request) {
-	templates, _ := setup(w, r)
-
-	c := appengine.NewContext(r)
+func RootHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
+	templates := setup(w, r)
 
 	var items []Item
 	q := datastore.NewQuery("Item").Order("-Score")
@@ -33,8 +31,8 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 	check(err, "Could not process template.")
 }
 
-func ItemHandler(w http.ResponseWriter, r *http.Request) {
-	templates, c := setup(w, r)
+func ItemHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
+	templates := setup(w, r)
 
 	vars := mux.Vars(r)
 
@@ -61,8 +59,8 @@ func ItemHandler(w http.ResponseWriter, r *http.Request) {
 	check(err, "Could not process template.")
 }
 
-func UserHandler(w http.ResponseWriter, r *http.Request) {
-	templates, c := setup(w, r)
+func UserHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
+	templates := setup(w, r)
 
 	vars := mux.Vars(r)
 	username := vars["username"]
