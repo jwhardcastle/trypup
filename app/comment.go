@@ -21,14 +21,20 @@ type Comment struct {
 	ParentKey     *datastore.Key
 	children      []*Comment 
 	commentKey    *datastore.Key
+	CommentTree
 }
 
-func loadComment(c appengine.Context, key *datastore.Key) Comment {
+func loadComment(c appengine.Context, key *datastore.Key, recursive bool) Comment {
 	var comment Comment
 	err := datastore.Get(c, key, &comment)
 	check(err, "Could not load comment.")
 
+	comment.commentKey = key
 	comment.loadOwner(c)
+
+	if(recursive) {
+		comment.children = comment.CommentTree.loadComments(c, key, recursive)
+	}
 
 	return comment
 }

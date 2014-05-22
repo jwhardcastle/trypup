@@ -27,6 +27,7 @@ type Item struct {
 	OwnerKey     *datastore.Key `datastore:"owner"`
 	comments     []*Comment `datastore:"-"`
 	itemKey      *datastore.Key `datastore:"-"`
+	CommentTree
 }
 
 // TODO: shard counters for votes https://developers.google.com/appengine/articles/sharding_counters
@@ -37,16 +38,9 @@ func (fn Item) string(i Item) string {
 
 func (item *Item) loadComments(c appengine.Context) {
 	var comments []*Comment
-	q := datastore.NewQuery("Comment").Filter("ParentKey=", item.itemKey).Order("-Score")
-	keys, err := q.GetAll(c, &comments)
 
-	for i, key := range keys {
-		comments[i].commentKey = key
-		comments[i].loadOwner(c)
-		comments[i].loadChildren(c, true)
-	}
+	comments = item.CommentTree.loadComments(c, item.itemKey, true)
 
-	check(err, "Could not load comments.")
 	(*item).comments = comments
 }
 
@@ -62,7 +56,7 @@ func (item Item) Key() *datastore.Key {
 }
 
 func (item Item) Owner() User {
-	// TODO: figure out how to make this lazy load, maybe from itemKey.parent()
+	// TODO: figure out how to make this lazy load
 	//if item.owner == nil {
 		//err:=datastore.Get(c, item.parent, &item.owner)
 		//check(err, "Could not load comments.")
@@ -70,11 +64,11 @@ func (item Item) Owner() User {
 	return *(item.owner) 
 }
 
-// Lazy-load comments
 func (item Item) Comments() []*Comment {
-	if (len(item.comments) == 0) {
+	// TODO: figure out how to make this lazy load
+	//if (len(item.comments) == 0) {
 		//item.loadComments() // TODO, no context here, can't load
-	}
+	//}
 	return item.comments	
 }
 
