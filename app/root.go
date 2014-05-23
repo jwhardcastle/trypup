@@ -17,6 +17,14 @@ func DummyHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 func RootHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	templates := setup(w, r)
 
+    session, err := store.Get(r, "trypup")
+	check(err, "Could not initalize session.")
+	
+	session.Values["username"] = "jwhardcastle"
+	session.Values["email"] = "jwhardcastle@jwhardcastle.com"
+	
+	session.Save(r,w)
+
 	var items []Item
 	q := datastore.NewQuery("Item").Order("-Score")
 	keys, err := q.GetAll(c, &items)
