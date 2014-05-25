@@ -55,6 +55,7 @@ func setup(w http.ResponseWriter, r *http.Request) *template.Template {
 		"app/view/footer.html",
 		"app/view/index.html",
 		"app/view/item.html",
+		"app/view/login.html",
 		"app/view/_comment.html",
 		"app/view/_item.html",
 		"app/view/user.html",
@@ -68,7 +69,7 @@ func setup(w http.ResponseWriter, r *http.Request) *template.Template {
 func to_base(q int64, alphabet string) string {
 	l := len(alphabet) // The base
 	maxdigits := int(math.Ceil(math.Log(float64(q))/math.Log(float64(l))))
-	var buffer [64]byte 
+	var buffer [64]byte
 	var r int // remainder
 	var i int
 	for i=0 ; q != 0; i++ {

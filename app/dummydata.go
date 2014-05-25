@@ -28,9 +28,13 @@ func dummyData(r *http.Request, c appengine.Context) {
 	u2 := User{Username: "jhutton", userKey: datastore.NewKey(c, "User", "jhutton", 0, nil)}
 	u3 := User{Username: "rkavalsky", userKey: datastore.NewKey(c, "User", "rkavalsky", 0, nil)}
 	u4 := User{Username: "teej", userKey: datastore.NewKey(c, "User", "teej", 0, nil)}
-
+	
+	for _, u := range []*User{&u1, &u2, &u3, &u4} {
+		u.setPassword("password1")
+	}
+	
 	i1 := Item{
-		Title:        "Baltimore Museum of Industry, learn how a linotype works, among the city's industrial history",
+		Title:        "Baltimore Museum of Industry, learn how a linotype works, among the city's industrial hiCstory",
 		owner:        &u1,
 		URLTitle:     "baltimore-museum-of-industry-learn-how-a",
 		Score:        36,

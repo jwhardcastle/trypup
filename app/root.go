@@ -17,14 +17,6 @@ func DummyHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 func RootHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	templates := setup(w, r)
 
-    session, err := store.Get(r, "trypup")
-	check(err, "Could not initalize session.")
-	
-	session.Values["username"] = "jwhardcastle"
-	session.Values["email"] = "jwhardcastle@jwhardcastle.com"
-	
-	session.Save(r,w)
-
 	var items []Item
 	q := datastore.NewQuery("Item").Order("-Score")
 	keys, err := q.GetAll(c, &items)
@@ -65,6 +57,30 @@ func ItemHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	
 	err = templates.ExecuteTemplate(w, "item.html", item)
 	check(err, "Could not process template.")
+}
+
+func LoginHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
+	templates := setup(w,r)
+	
+	err := r.ParseForm()
+	check(err, "Could not process login information.")
+	
+	var user User
+	
+	if(len(r.PostForm["Username"])!=0) {
+		user := getUser(c, r.PostForm["Username"][0])
+		err = user.checkPassword(r.PostForm["Password"][0])
+		check(err, "Could not verify password.") // TODO: make this return a flash and reload the page
+	
+	    session, err := store.Get(r, "trypup")
+		check(err, "Could not initalize session.")
+		
+		session.Values["Username"] = user.Username
+		
+		session.Save(r,w)
+	}
+	
+	err = templates.ExecuteTemplate(w, "login.html", user)
 }
 
 func UserHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
