@@ -10,6 +10,7 @@ import (
 func init() {
 	r := new(mux.Router)
 
+	r.Handle("/login/", NewAppHandler(LoginHandler))
 	r.Handle("/share/{id}/{urltitle}", NewAppHandler(ItemHandler))
 	r.Handle("/user/{username}", NewAppHandler(UserHandler))
 	r.Handle("/dummy", NewAppHandler(DummyHandler))
