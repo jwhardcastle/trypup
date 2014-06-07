@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"net/http"
 	"math"
+	"github.com/mjibson/appstats"
 )
 
 // Dignified error handling
@@ -16,12 +17,21 @@ type appError struct {
 }
 
 // http.Handle doesn't expect you to return an error, but we want to surface them
-type appHandler func(appengine.Context, http.ResponseWriter, *http.Request)
+type AppHandler struct {
+	f	appstats.Handler
+}
+
+func NewAppHandler(f func(appengine.Context, http.ResponseWriter, *http.Request)) AppHandler {
+	return AppHandler {
+		f: appstats.NewHandler(f),
+	}
+}
 
 // Serve HTTP, and handle error messages with dignity by displaying a nice error page
-func (fn appHandler) ServeHTTP(c appengine.Context, w http.ResponseWriter, r *http.Request) {
+func (a AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if recv := recover(); recv != nil {
+
 			e := recv.(*appError)
 
 			http.StatusText(e.Code)
@@ -36,7 +46,7 @@ func (fn appHandler) ServeHTTP(c appengine.Context, w http.ResponseWriter, r *ht
 
 		}
 	}()
-	fn(c, w, r)
+	a.f.ServeHTTP(w, r)
 }
 
 // Check errors, panic if we have an error
