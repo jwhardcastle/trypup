@@ -6,6 +6,7 @@ import (
 	"appengine/datastore"
 	"github.com/gorilla/mux"
 	"net/http"
+	"bytes"
 )
 
 // Load dummy data
@@ -27,8 +28,11 @@ func RootHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 		items[i].loadOwner(c)
 	}
 
-	err = templates.ExecuteTemplate(w, "index.html", items)
+	var b bytes.Buffer
+
+	err = templates.ExecuteTemplate(&b, "index.html", items)
 	check(err, "Could not process template.")
+	b.WriteTo(w)
 }
 
 func ItemHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
@@ -55,8 +59,11 @@ func ItemHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	item.loadOwner(c)
 	item.loadComments(c)
 	
-	err = templates.ExecuteTemplate(w, "item.html", item)
+	var b bytes.Buffer
+
+	err = templates.ExecuteTemplate(&b, "item.html", item)
 	check(err, "Could not process template.")
+	b.WriteTo(w)
 }
 
 func UserHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
@@ -66,6 +73,9 @@ func UserHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	username := vars["username"]
 	user := getUser(c, username) // TODO: do an actual lookup
 
-	err := templates.ExecuteTemplate(w, "user.html", user)
+	var b bytes.Buffer
+
+	err := templates.ExecuteTemplate(&b, "user.html", user)
 	check(err, "Could not process template.")
+	b.WriteTo(w)
 }
