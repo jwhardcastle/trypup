@@ -25,6 +25,25 @@ func (fn User) string(u User) string {
 	return u.Username
 }
 
+
+// Create a new user
+func New(c appengine.Context, username string, password string) *User {
+	user := new(User)
+	user.Username = username
+	user.setPassword(password)
+	user.userKey = datastore.NewKey(c, "User", username, 0, nil)
+	user.Save(c)
+	return user
+}
+
+// Store the user in the datastore
+func (user *User) Save(c appengine.Context) error {
+	var err error
+	(*user).userKey, err = datastore.Put(c, (*user).userKey, user)
+	return err
+}
+
+
 // Return the specified user from the datastore
 func getUser(c appengine.Context, username string) (User, error) {
 	user := new(User)
