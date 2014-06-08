@@ -16,7 +16,7 @@ func DummyHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 
 // Show the front page
 func RootHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
-	templates := setup(w, r)
+	templates,p := setup(c, w, r)
 
 	var items []Item
 	q := datastore.NewQuery("Item").Order("-Score")
@@ -28,15 +28,17 @@ func RootHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 		items[i].loadOwner(c)
 	}
 
+	p.Data = append(p.Data, items)
+
 	var b bytes.Buffer
 
-	err = templates.ExecuteTemplate(&b, "index.html", items)
+	err = templates.ExecuteTemplate(&b, "index.html", p)
 	check(err, "Could not process template.")
 	b.WriteTo(w)
 }
 
 func ItemHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
-	templates := setup(w, r)
+	templates,p := setup(c, w, r)
 
 	vars := mux.Vars(r)
 
@@ -58,50 +60,60 @@ func ItemHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	item.itemKey = key
 	item.loadOwner(c)
 	item.loadComments(c)
-	
+
+	p.Data = append(p.Data, item)
+
 	var b bytes.Buffer
 
-	err = templates.ExecuteTemplate(&b, "item.html", item)
+	err = templates.ExecuteTemplate(&b, "item.html", p)
 	check(err, "Could not process template.")
 	b.WriteTo(w)
 }
 
 func LoginHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
-	templates := setup(w,r)
-	
+	templates,p := setup(c, w,r)
+
 	err := r.ParseForm()
 	check(err, "Could not process login information.")
-	
-	var user User
-	
+
 	if(len(r.PostForm["Username"])!=0) {
-		user := getUser(c, r.PostForm["Username"][0])
-		err = user.checkPassword(r.PostForm["Password"][0])
-		check(err, "Could not verify password.") // TODO: make this return a flash and reload the page
-	
-	    session, err := store.Get(r, "trypup")
-		check(err, "Could not initalize session.")
-		
-		session.Values["Username"] = user.Username
-		
-		session.Save(r,w)
+		user,err := getUser(c, r.PostForm["Username"][0])
+		if(err != nil) {
+			p.Session.AddFlash("Could not find that username.")
+		} else {
+
+			err = user.checkPassword(r.PostForm["Password"][0])
+			if(err != nil) {
+				p.Session.AddFlash(nil, "Could not verify password.")
+			}
+			//check(err, "Could not verify password.") // TODO: make this return a flash and reload the page
+
+			p.Session.Values["Username"] = user.Username
+			p.User = user
+
+			p.Session.Save(r,w)
+		}
 	}
-	
+
 	var b bytes.Buffer
-	err = templates.ExecuteTemplate(&b, "login.html", user)
+	err = templates.ExecuteTemplate(&b, "login.html", p)
 	b.WriteTo(w)
 }
 
 func UserHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
-	templates := setup(w, r)
+	templates,p := setup(c, w, r)
 
 	vars := mux.Vars(r)
 	username := vars["username"]
-	user := getUser(c, username) // TODO: do an actual lookup
+	user, err := getUser(c, username) // TODO: do an actual lookup
+
+	check(err, "A user with that name could not be found.")
+
+	p.Data = append(p.Data, user)
 
 	var b bytes.Buffer
 
-	err := templates.ExecuteTemplate(&b, "user.html", user)
+	err = templates.ExecuteTemplate(&b, "user.html", p)
 	check(err, "Could not process template.")
 	b.WriteTo(w)
 }

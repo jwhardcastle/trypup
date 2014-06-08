@@ -1,11 +1,13 @@
-{{ template "header" }}
-	{{ template "_item" . }}
+{{ template "header" . }}
+	{{ range .Data }}
+		{{ template "_item" . }}
 
+		<div class="comments">
+				{{ range .Comments }}
+					{{ template "_comment" . }}
+				{{ end }}
+		</div>
 
-	<div class="comments">
-			{{ range .Comments }}
-				{{ template "_comment" . }}
-			{{ end }}
-	</div>
+	{{ end }}
 
-{{ template "footer" }}
+{{ template "footer" . }}

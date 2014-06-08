@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"math"
 	"github.com/mjibson/appstats"
+	"github.com/gorilla/sessions"
+	"log"
 )
 
 // Dignified error handling
@@ -15,6 +17,15 @@ type appError struct {
 	Message string
 	Code    int
 }
+
+type page struct {
+	LoggedIn	bool
+	User		User
+	Title		string
+	Session		*sessions.Session
+	Data		[]interface{}
+}
+
 
 // http.Handle doesn't expect you to return an error, but we want to surface them
 type AppHandler struct {
@@ -33,6 +44,9 @@ func (a AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if recv := recover(); recv != nil {
 
 			e := recv.(*appError)
+
+			log.Print(e.Error)
+
 
 			http.StatusText(e.Code)
 			t, err := template.ParseFiles("errors/500.html")
@@ -57,22 +71,35 @@ func check(err error, message string) {
 }
 
 // Make sure we're ready to go, with Content-Type and more
-func setup(w http.ResponseWriter, r *http.Request) *template.Template {
+func setup(c appengine.Context, w http.ResponseWriter, r *http.Request) (*template.Template, page) {
 	w.Header().Set("Content-Type", "text/html")
 
-	templates, err := template.ParseFiles(
-		"app/view/header.html",
-		"app/view/footer.html",
-		"app/view/index.html",
-		"app/view/item.html",
-		"app/view/login.html",
-		"app/view/_comment.html",
-		"app/view/_item.html",
-		"app/view/user.html",
-	)
-	check(err, "Could not process templates.")
+	defer func() {
+		if recv := recover(); recv != nil {
+			err := recv.(error)
+			check(err, "Could not process templates.")
+		}
+	}()
 
-	return templates
+	templates := template.Must(template.New("").Funcs(template.FuncMap{
+			//"printFlashes": printFlashes,
+		}).ParseGlob("app/view/*.html"))
+
+	var p page
+	var err error
+
+	p.Session, err = store.Get(r, "trypup")
+	check(err, "Couldn't load session.")
+
+	if(p.Session.Values["Username"] != nil) {
+		p.User, err = getUser(c, p.Session.Values["Username"].(string))
+		p.LoggedIn = true
+		check(err, "Could not load your user profile.")
+	} else {
+		p.LoggedIn = false
+	}
+
+	return templates, p
 }
 
 // Shamelessly stolen from Reddit, ported to Go

@@ -1,3 +1,5 @@
-{{ template "header" }}
-	<h2>{{.Username}}</h2>
-{{ template "footer" }}
+{{ template "header" . }}
+	{{ range .Data }}
+		<h2>{{.Username}}</h2>
+	{{ end }}
+{{ template "footer" . }}

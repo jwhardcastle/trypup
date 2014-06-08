@@ -1,11 +1,13 @@
-{{ template "header" }}
+{{ template "header" . }}
         
 	<div id="map"></div>
 		
-		{{range .}}
-			{{ template "_item" . }}
+		{{range .Data}}
+			{{ range . }}
+				{{ template "_item" . }}
+			{{ end }}
 		{{end}}
 	
 	</div>
         
-{{ template "footer" }}
+{{ template "footer" . }}
