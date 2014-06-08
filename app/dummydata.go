@@ -24,18 +24,18 @@ func dummyData(r *http.Request, c appengine.Context) {
 	d, err = dq.GetAll(c, nil)
 	datastore.DeleteMulti(c, d)
 
-	u1 := User{Username: "jwhardcastle", userKey: datastore.NewKey(c, "User", "jwhardcastle", 0, nil)}
-	u2 := User{Username: "jhutton", userKey: datastore.NewKey(c, "User", "jhutton", 0, nil)}
-	u3 := User{Username: "rkavalsky", userKey: datastore.NewKey(c, "User", "rkavalsky", 0, nil)}
-	u4 := User{Username: "teej", userKey: datastore.NewKey(c, "User", "teej", 0, nil)}
+	u1 := NewUser(c, "jwhardcastle", "password")
+	u2 := NewUser(c, "jhutton", "password")
+	u3 := NewUser(c, "rkavalsky", "password")
+	u4 := NewUser(c, "teej", "password")
 	
-	for _, u := range []*User{&u1, &u2, &u3, &u4} {
+	for _, u := range []*User{u1, u2, u3, u4} {
 		u.setPassword("password1")
 	}
 	
 	i1 := Item{
 		Title:        "Baltimore Museum of Industry, learn how a linotype works, among the city's industrial hiCstory",
-		owner:        &u1,
+		owner:        u1,
 		URLTitle:     "baltimore-museum-of-industry-learn-how-a",
 		Score:        36,
 		Upvotes:      40,
@@ -49,7 +49,7 @@ func dummyData(r *http.Request, c appengine.Context) {
 
 	i2 := Item{
 		Title:        "OPACY: Oriole Park at Camden Yards, Home of the Baltimore Orioles",
-		owner:        &u2,
+		owner:        u2,
 		URLTitle:     "opacy-oriole-park-at-camden-yards-home-o",
 		Score:        129,
 		Upvotes:      150,
@@ -62,7 +62,7 @@ func dummyData(r *http.Request, c appengine.Context) {
 	}
 
 	c1 := Comment{
-		owner:     &u3,
+		owner:     u3,
 		Body:      "We love going here!",
 		Score:     3,
 		Upvotes:   3,
@@ -70,14 +70,14 @@ func dummyData(r *http.Request, c appengine.Context) {
 	}
 
 	c2 := Comment{
-		owner:     &u4,
+		owner:     u4,
 		Body:      "typography geek heaven",
 		Score:     5,
 		Upvotes:   5,
 		Downvotes: 0,
 	}
 	c3 := Comment{
-		owner:         &u1,
+		owner:         u1,
 		Body:          "Agreed! Among other things.",
 		parentComment: &c2,
 		Score:         0,
@@ -91,16 +91,13 @@ func dummyData(r *http.Request, c appengine.Context) {
 	//i1.comments = []*Comment{&c2}
 	//i2.comments = []*Comment{&c1}
 
-	userKeys, err := datastore.PutMulti(c, []*datastore.Key{u1.userKey, u2.userKey, u3.userKey, u4.userKey}, []interface{}{&u1, &u2, &u3, &u4})
-	check(err, "Could not store users in datastore.")
-
 	itemKeys := []*datastore.Key{
 		datastore.NewIncompleteKey(c, "Item", nil),
 		datastore.NewIncompleteKey(c, "Item", nil),
 	}
 
-	i1.OwnerKey = userKeys[0]
-	i2.OwnerKey = userKeys[1]
+	i1.OwnerKey = u1.userKey 
+	i2.OwnerKey = u2.userKey 
 
 	itemKeys, err = datastore.PutMulti(c, itemKeys, []interface{}{&i1, &i2})
 	check(err, "Could not store items in datastore.")
@@ -111,16 +108,16 @@ func dummyData(r *http.Request, c appengine.Context) {
 	}
 
 	c1.ParentKey = itemKeys[1]
-	c1.OwnerKey = userKeys[0]
+	c1.OwnerKey = u3.userKey 
 
 	c2.ParentKey = itemKeys[0]
-	c2.OwnerKey = userKeys[3]
+	c2.OwnerKey = u4.userKey 
 
 	commentKeys, err = datastore.PutMulti(c, commentKeys, []interface{}{&c1, &c2})
 	check(err, "Could not store comments in datastore.")
 
 	c3.ParentKey = commentKeys[1]
-	c3.OwnerKey = userKeys[0]
+	c3.OwnerKey = u1.userKey
 	_, err = datastore.Put(c, datastore.NewIncompleteKey(c, "Comment", nil), &c3) // The third comment is a child on the second
 	check(err, "Could not store comments in datastore.")
 

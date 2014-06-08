@@ -27,7 +27,7 @@ func (fn User) string(u User) string {
 
 
 // Create a new user
-func New(c appengine.Context, username string, password string) *User {
+func NewUser(c appengine.Context, username string, password string) *User {
 	user := new(User)
 	user.Username = username
 	user.setPassword(password)
