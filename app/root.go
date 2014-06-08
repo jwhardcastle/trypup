@@ -2,11 +2,14 @@
 package app
 
 import (
+	"bytes"
+	"log"
+	"net/http"
+
+	"github.com/gorilla/mux"
+
 	"appengine"
 	"appengine/datastore"
-	"github.com/gorilla/mux"
-	"net/http"
-	"bytes"
 )
 
 // Load dummy data
@@ -16,7 +19,7 @@ func DummyHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 
 // Show the front page
 func RootHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
-	templates,p := setup(c, w, r)
+	templates, p := setup(c, w, r)
 
 	var items []Item
 	q := datastore.NewQuery("Item").Order("-Score")
@@ -38,13 +41,13 @@ func RootHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 }
 
 func ItemHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
-	templates,p := setup(c, w, r)
+	templates, p := setup(c, w, r)
 
 	vars := mux.Vars(r)
 
 	id := vars["id"]
-	intID:=decodeID(id)
-	key := datastore.NewKey(c,"Item","",intID,nil)
+	intID := decodeID(id)
+	key := datastore.NewKey(c, "Item", "", intID, nil)
 
 	var item Item
 	err := datastore.Get(c, key, &item)
@@ -53,9 +56,9 @@ func ItemHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	check(err, "Could not load item.")
 
 	/*
-	items[0].itemKey = keys[0]
-	items[0].loadOwner(c)
-	items[0].loadComments(c)
+		items[0].itemKey = keys[0]
+		items[0].loadOwner(c)
+		items[0].loadComments(c)
 	*/
 	item.itemKey = key
 	item.loadOwner(c)
@@ -71,27 +74,50 @@ func ItemHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 }
 
 func LoginHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
-	templates,p := setup(c, w,r)
+	templates, p := setup(c, w, r)
 
 	err := r.ParseForm()
 	check(err, "Could not process login information.")
 
-	if(len(r.PostForm["Username"])!=0) {
-		user,err := getUser(c, r.PostForm["Username"][0])
-		if(err != nil) {
-			p.Session.AddFlash("Could not find that username.")
-		} else {
+	if len(r.PostForm) > 0 {
+		log.Print(r.PostForm)
+		if len(r.PostForm["Username"][0]) > 0 {
+			user, err := getUser(c, r.PostForm["Username"][0])
+			if err != nil {
+				p.Session.AddFlash("Could not find that username.")
 
-			err = user.checkPassword(r.PostForm["Password"][0])
-			if(err != nil) {
-				p.Session.AddFlash(nil, "Could not verify password.")
+			} else {
+				if len(r.PostForm["Password"][0]) > 0 {
+					err = user.checkPassword(r.PostForm["Password"][0])
+
+					if err != nil {
+						p.Session.AddFlash("Your password is incorrect.")
+
+					} else {
+						p.Session.Values["Username"] = user.Username
+						p.User = user
+						p.Session.Save(r, w)
+						http.Redirect(w, r, "/", 302)
+
+					}
+
+				} else {
+					p.Session.AddFlash("Password may not be blank.")
+
+				}
+
 			}
-			//check(err, "Could not verify password.") // TODO: make this return a flash and reload the page
+		} else {
+			p.Session.AddFlash("Username may not be blank.")
 
-			p.Session.Values["Username"] = user.Username
-			p.User = user
+		}
 
-			p.Session.Save(r,w)
+		p.Session.Save(r, w)
+	}
+
+	if flashes := p.Session.Flashes(); len(flashes) > 0 {
+		for _, f := range flashes {
+			p.Flashes = append(p.Flashes, f)
 		}
 	}
 
@@ -101,7 +127,7 @@ func LoginHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 }
 
 func UserHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
-	templates,p := setup(c, w, r)
+	templates, p := setup(c, w, r)
 
 	vars := mux.Vars(r)
 	username := vars["username"]

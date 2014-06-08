@@ -3,11 +3,13 @@
 package app
 
 import (
+	"math"
+	"regexp"
+	"strings"
+	"time"
+
 	"appengine"
 	"appengine/datastore"
-	"time"
-	"strings"
-	"math"
 )
 
 type Item struct {
@@ -23,9 +25,9 @@ type Item struct {
 	Upvotes      int
 	Downvotes    int
 	CommentCount int
-	owner        *User `datastore:"-"`
+	owner        *User          `datastore:"-"`
 	OwnerKey     *datastore.Key `datastore:"owner"`
-	comments     []*Comment `datastore:"-"`
+	comments     []*Comment     `datastore:"-"`
 	itemKey      *datastore.Key `datastore:"-"`
 	CommentTree
 }
@@ -34,6 +36,35 @@ type Item struct {
 
 func (fn Item) string(i Item) string {
 	return i.Title
+}
+
+func NewItem(c appengine.Context, title string, description string, icon string, color string, lat float32, long float32, owner *User) *Item {
+	item := new(Item)
+	item.Title = title
+	item.Description = description
+	item.Icon = icon
+	item.Color = color
+	item.Lat = lat
+	item.Long = long
+	item.owner = owner
+	item.OwnerKey = (*owner).userKey
+
+	titleRegEx, _ := regexp.Compile("[^a-z0-9]")
+	item.URLTitle = string(titleRegEx.ReplaceAll([]byte(strings.ToLower(title)), []byte("-")))
+
+	item.DateCreated = time.Now()
+
+	item.Save(c)
+	return item
+}
+
+func (item *Item) Save(c appengine.Context) error {
+	if (*item).itemKey == nil {
+		item.itemKey = datastore.NewIncompleteKey(c, "Item", nil)
+	}
+	var err error
+	(*item).itemKey, err = datastore.Put(c, (*item).itemKey, item)
+	return err
 }
 
 func (item *Item) loadComments(c appengine.Context) {
@@ -55,21 +86,43 @@ func (item Item) Key() *datastore.Key {
 	return item.itemKey
 }
 
+func (item *Item) CountVotes(c appengine.Context) {
+	q := datastore.NewQuery("Vote").Filter("ParentKey=", (*item).itemKey)
+	var votes []Vote
+	_, err := q.GetAll(c, &votes)
+	check(err, "Couldn't load votes.")
+
+	var s, u, d int
+	for _, vote := range votes {
+		s += int(vote.Value)
+
+		if vote.Value > 0 {
+			u++
+		} else {
+			d++
+		}
+	}
+	(*item).Score = s
+	(*item).Upvotes = u
+	(*item).Downvotes = d
+	item.Save(c)
+}
+
 func (item Item) Owner() User {
 	// TODO: figure out how to make this lazy load
 	//if item.owner == nil {
-		//err:=datastore.Get(c, item.parent, &item.owner)
-		//check(err, "Could not load comments.")
+	//err:=datastore.Get(c, item.parent, &item.owner)
+	//check(err, "Could not load comments.")
 	//}
-	return *(item.owner) 
+	return *(item.owner)
 }
 
 func (item Item) Comments() []*Comment {
 	// TODO: figure out how to make this lazy load
 	//if (len(item.comments) == 0) {
-		//item.loadComments() // TODO, no context here, can't load
+	//item.loadComments() // TODO, no context here, can't load
 	//}
-	return item.comments	
+	return item.comments
 }
 
 // Take the IntID and convert it to base36 for use in URLs, etc.
@@ -82,9 +135,9 @@ func decodeID(id string) int64 {
 	alphabet := "0123456789abcdefghijklmnopqrstuvwxyz"
 	var output int64
 	output = 0
-	for i:=0; i < len(id) ; i++ {
+	for i := 0; i < len(id); i++ {
 		m := strings.IndexByte(alphabet, id[i])
-		output = output + int64(float64(m) * (math.Pow(float64(36), float64(len(id)-1-i))) )
+		output = output + int64(float64(m)*(math.Pow(float64(36), float64(len(id)-1-i))))
 	}
 	return output
 }

@@ -3,25 +3,70 @@
 package app
 
 import (
+	"time"
+
 	"appengine"
 	"appengine/datastore"
-	"time"
 )
 
 type Comment struct {
-	Body          string
-	DateCreated   time.Time
-	Score         int
-	Upvotes       int
-	Downvotes     int
-	owner         *User
-	OwnerKey      *datastore.Key
-	parentComment *Comment
-	parentitem    *Item
-	ParentKey     *datastore.Key
-	children      []*Comment 
-	commentKey    *datastore.Key
+	Body        string
+	DateCreated time.Time
+	Score       int
+	Upvotes     int
+	Downvotes   int
+	owner       *User
+	OwnerKey    *datastore.Key
+	parent      Votable
+	ParentKey   *datastore.Key
+	children    []*Comment
+	commentKey  *datastore.Key
 	CommentTree
+}
+
+func NewComment(c appengine.Context, body string, owner *User, parent Votable) *Comment {
+	comment := new(Comment)
+	comment.Body = body
+	comment.owner = owner
+	comment.OwnerKey = owner.userKey
+	comment.parent = parent
+	comment.ParentKey = parent.Key()
+	comment.Save(c)
+
+	return comment
+}
+
+func (comment *Comment) Save(c appengine.Context) error {
+	if (*comment).commentKey == nil {
+		(*comment).commentKey = datastore.NewIncompleteKey(c, "Comment", nil)
+	}
+
+	var err error
+	(*comment).commentKey, err = datastore.Put(c, (*comment).commentKey, comment)
+
+	return err
+}
+
+func (comment *Comment) CountVotes(c appengine.Context) {
+	q := datastore.NewQuery("Vote").Filter("ParentKey=", (*comment).commentKey)
+	var votes []Vote
+	_, err := q.GetAll(c, &votes)
+	check(err, "Couldn't load votes.")
+
+	var s, u, d int
+	for _, vote := range votes {
+		s += int(vote.Value)
+
+		if vote.Value > 0 {
+			u++
+		} else {
+			d++
+		}
+	}
+	(*comment).Score = s
+	(*comment).Upvotes = u
+	(*comment).Downvotes = d
+	comment.Save(c)
 }
 
 func loadComment(c appengine.Context, key *datastore.Key, recursive bool) Comment {
@@ -32,7 +77,7 @@ func loadComment(c appengine.Context, key *datastore.Key, recursive bool) Commen
 	comment.commentKey = key
 	comment.loadOwner(c)
 
-	if(recursive) {
+	if recursive {
 		comment.children = comment.CommentTree.loadComments(c, key, recursive)
 	}
 
@@ -45,7 +90,7 @@ func (comment *Comment) loadOwner(c appengine.Context) {
 	check(err, "Could not load comment owner.")
 
 	(*comment).owner = &u
-	
+
 }
 
 func (comment *Comment) loadChildren(c appengine.Context, recursive bool) {
@@ -54,13 +99,12 @@ func (comment *Comment) loadChildren(c appengine.Context, recursive bool) {
 	keys, err := q.GetAll(c, &children)
 	check(err, "Could not load child comments.")
 
-
 	var childs []*Comment
 	for i, key := range keys {
 		children[i].commentKey = key
 		children[i].loadOwner(c)
 
-		if(recursive) {
+		if recursive {
 			children[i].loadChildren(c, recursive)
 		}
 
@@ -68,6 +112,10 @@ func (comment *Comment) loadChildren(c appengine.Context, recursive bool) {
 	}
 
 	(*comment).children = childs
+}
+
+func (comment Comment) Key() *datastore.Key {
+	return comment.commentKey
 }
 
 func (comment Comment) Owner() User {

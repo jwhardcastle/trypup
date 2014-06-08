@@ -39,7 +39,7 @@
 		{{ end }}
 	</header>
 
-	{{ range .Session.Flashes }}
+	{{ range .Flashes }}
 		{{ template "_flash" . }}
 	{{ end }}
 

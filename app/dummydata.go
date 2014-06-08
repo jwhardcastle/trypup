@@ -1,9 +1,12 @@
 package app
 
 import (
+	"math/rand"
+	"net/http"
+	"strconv"
+
 	"appengine"
 	"appengine/datastore"
-	"net/http"
 )
 
 func dummyData(r *http.Request, c appengine.Context) {
@@ -11,114 +14,54 @@ func dummyData(r *http.Request, c appengine.Context) {
 	// Start by wiping out the data we're about to populate
 	// Delete all users
 	dq := datastore.NewQuery("User").KeysOnly()
-	d, err := dq.GetAll(c, nil)
+	d, _ := dq.GetAll(c, nil)
 	datastore.DeleteMulti(c, d)
 
 	// Delete all items
 	dq = datastore.NewQuery("Item").KeysOnly()
-	d, err = dq.GetAll(c, nil)
+	d, _ = dq.GetAll(c, nil)
 	datastore.DeleteMulti(c, d)
 
 	// Delete all comments
 	dq = datastore.NewQuery("Comment").KeysOnly()
-	d, err = dq.GetAll(c, nil)
+	d, _ = dq.GetAll(c, nil)
 	datastore.DeleteMulti(c, d)
 
-	u1 := NewUser(c, "jwhardcastle", "password")
-	u2 := NewUser(c, "jhutton", "password")
-	u3 := NewUser(c, "rkavalsky", "password")
-	u4 := NewUser(c, "teej", "password")
-	
-	for _, u := range []*User{u1, u2, u3, u4} {
-		u.setPassword("password1")
-	}
-	
-	i1 := Item{
-		Title:        "Baltimore Museum of Industry, learn how a linotype works, among the city's industrial hiCstory",
-		owner:        u1,
-		URLTitle:     "baltimore-museum-of-industry-learn-how-a",
-		Score:        36,
-		Upvotes:      40,
-		Downvotes:    4,
-		Lat:          39.273556,
-		Long:         -76.601806,
-		CommentCount: 2,
-		Color:        "cadetblue",
-		Icon:         "truck",
-	}
+	// Delete all comments
+	dq = datastore.NewQuery("Vote").KeysOnly()
+	d, _ = dq.GetAll(c, nil)
+	datastore.DeleteMulti(c, d)
 
-	i2 := Item{
-		Title:        "OPACY: Oriole Park at Camden Yards, Home of the Baltimore Orioles",
-		owner:        u2,
-		URLTitle:     "opacy-oriole-park-at-camden-yards-home-o",
-		Score:        129,
-		Upvotes:      150,
-		Downvotes:    11,
-		Lat:          39.283501,
-		Long:         -76.6219798,
-		CommentCount: 1,
-		Color:        "orange",
-		Icon:         "sun-o",
+	u1 := NewUser(c, "jwhardcastle", "")
+	u2 := NewUser(c, "jhutton", "")
+	u3 := NewUser(c, "rkavalsky", "")
+	u4 := NewUser(c, "teej", "")
+
+	i1 := NewItem(c, "Baltimore Museum of Industry, learn how a linotype works, among the city's industrial hiCstory", "This is a really cool museum that has lots of interesting displays.", "truck", "cadetblue", 39.273556, -76.601806, u1)
+
+	i2 := NewItem(c, "OPACY: Oriole Park at Camden Yards, Home of the Baltimore Orioles", "Camden Yards is the first of the modern \"retro\" stadiums that harkens back to an earlier age of Baseball", "sun-o", "orange", 39.283501, -76.6219798, u2)
+
+	c1 := NewComment(c, "We love going here!", u3, i2)
+	c2 := NewComment(c, "typography geek heaven", u4, i1)
+	c3 := NewComment(c, "Agreed! Among other things.", u1, c2)
+
+	votables := []Votable{i1, i2, c1, c2, c3}
+
+	for i := 0; i < 100; i++ {
+		u := NewUser(c, "user"+strconv.FormatInt(int64(i), 10), "")
+		for _, v := range votables {
+			var value = rand.Intn(5) - 1
+			if value == 0 {
+				continue
+			} else if value > 0 {
+				value = 1
+			}
+			NewVote(c, u, v, int8(value))
+		}
 	}
 
-	c1 := Comment{
-		owner:     u3,
-		Body:      "We love going here!",
-		Score:     3,
-		Upvotes:   3,
-		Downvotes: 0,
+	for _, v := range votables {
+		v.CountVotes(c)
 	}
-
-	c2 := Comment{
-		owner:     u4,
-		Body:      "typography geek heaven",
-		Score:     5,
-		Upvotes:   5,
-		Downvotes: 0,
-	}
-	c3 := Comment{
-		owner:         u1,
-		Body:          "Agreed! Among other things.",
-		parentComment: &c2,
-		Score:         0,
-		Upvotes:       1,
-		Downvotes:     1,
-	}
-
-	//c2.Children = append(c2.Children, &c3)
-
-	// We are generating comments as if we had these associations
-	//i1.comments = []*Comment{&c2}
-	//i2.comments = []*Comment{&c1}
-
-	itemKeys := []*datastore.Key{
-		datastore.NewIncompleteKey(c, "Item", nil),
-		datastore.NewIncompleteKey(c, "Item", nil),
-	}
-
-	i1.OwnerKey = u1.userKey 
-	i2.OwnerKey = u2.userKey 
-
-	itemKeys, err = datastore.PutMulti(c, itemKeys, []interface{}{&i1, &i2})
-	check(err, "Could not store items in datastore.")
-
-	commentKeys := []*datastore.Key{
-		datastore.NewIncompleteKey(c, "Comment", nil),
-		datastore.NewIncompleteKey(c, "Comment", nil),
-	}
-
-	c1.ParentKey = itemKeys[1]
-	c1.OwnerKey = u3.userKey 
-
-	c2.ParentKey = itemKeys[0]
-	c2.OwnerKey = u4.userKey 
-
-	commentKeys, err = datastore.PutMulti(c, commentKeys, []interface{}{&c1, &c2})
-	check(err, "Could not store comments in datastore.")
-
-	c3.ParentKey = commentKeys[1]
-	c3.OwnerKey = u1.userKey
-	_, err = datastore.Put(c, datastore.NewIncompleteKey(c, "Comment", nil), &c3) // The third comment is a child on the second
-	check(err, "Could not store comments in datastore.")
 
 }
