@@ -6,10 +6,10 @@ import (
 )
 
 type CommentTree struct {
-	comments	[]*Comment
-	Parent		*datastore.Key
-	Count		int
-	ScoreSum	int
+	comments     []*Comment
+	Parent       *datastore.Key
+	CommentCount int
+	ScoreSum     int
 }
 
 func (ct *CommentTree) loadComments(c appengine.Context, key *datastore.Key, recursive bool) []*Comment {
@@ -27,6 +27,23 @@ func (ct *CommentTree) loadComments(c appengine.Context, key *datastore.Key, rec
 	return ct.comments
 }
 
+func (ct *CommentTree) Count() int {
+	if ct.CommentCount > 0 {
+		return ct.CommentCount
+	}
+
+	count := len(ct.comments)
+
+	if count > 0 {
+		for _, ctchild := range ct.comments {
+			count += ctchild.CommentTree.Count()
+		}
+	}
+
+	ct.CommentCount = count
+
+	return count
+}
 
 func (ct CommentTree) Comments() []*Comment {
 	return ct.comments

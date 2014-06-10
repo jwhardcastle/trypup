@@ -13,22 +13,22 @@ import (
 )
 
 type Item struct {
-	Title        string
-	Description  string
-	Lat          float32
-	Long         float32
-	URLTitle     string
-	Icon         string
-	Color        string
-	DateCreated  time.Time
-	Score        int
-	Upvotes      int
-	Downvotes    int
-	CommentCount int
-	owner        *User          `datastore:"-"`
-	OwnerKey     *datastore.Key `datastore:"owner"`
-	comments     []*Comment     `datastore:"-"`
-	itemKey      *datastore.Key `datastore:"-"`
+	Title       string
+	Description string
+	Lat         float32
+	Long        float32
+	URLTitle    string
+	Icon        string
+	Color       string
+	DateCreated time.Time
+	Score       int
+	Upvotes     int
+	Downvotes   int
+	//CommentCount int
+	owner    *User          `datastore:"-"`
+	OwnerKey *datastore.Key `datastore:"owner"`
+	comments []*Comment     `datastore:"-"`
+	itemKey  *datastore.Key `datastore:"-"`
 	CommentTree
 }
 

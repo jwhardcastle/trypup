@@ -52,6 +52,10 @@ func ItemHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	item.loadOwner(c)
 	item.loadComments(c)
 
+	// Since we've already loaded the comments, count 'em up and store for later reference
+	item.CommentTree.Count()
+	item.Save(c)
+
 	p.Data["Item"] = item
 
 	renderTemplate(w, "item.html", p)
