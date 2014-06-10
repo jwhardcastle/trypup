@@ -23,6 +23,7 @@ func init() {
 	r.Handle("/share/{id}/{urltitle}", NewAppHandler(ItemHandler))
 	r.Handle("/user/{username}", NewAppHandler(UserHandler))
 	r.Handle("/dummy", NewAppHandler(DummyHandler))
+	r.Handle("/comments/new", NewAppHandler(AddComment)).Methods("GET", "POST", "PUT")
 	r.Handle("/", NewAppHandler(RootHandler))
 
 	http.Handle("/", r)

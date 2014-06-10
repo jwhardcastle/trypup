@@ -4,6 +4,12 @@
 	    <a href="/user/{{.Owner.Username}}">{{.Owner.Username}}</a>
 	    {{ .Score }} points (<span class="upv">{{.Upvotes}}</span>|<span class="downv">{{.Downvotes}}</span>)
 	    <div class="body">{{ .Body }}</div>
+	    <form method="POST" action="/comments/new">
+		    <textarea name="b"></textarea>
+		    <input type="hidden" name="pt" value="c">
+		    <input type="hidden" name="p" value="{{ .URLID }}">
+		    <input type="submit" value="Reply">
+	    </form>
 	    {{ with .Children }} 
 	    	{{ range .}}
 	    		{{template "_comment" .}}

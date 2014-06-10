@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"runtime/debug"
 
 	"github.com/gorilla/sessions"
 	"github.com/mjibson/appstats"
@@ -69,6 +70,9 @@ func (a AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 
 			log.Print(e.Error)
+			if false {
+				debug.PrintStack()
+			}
 
 			http.StatusText(e.Code)
 			t, err := template.ParseFiles("errors/500.html")
@@ -106,9 +110,9 @@ func initTemplates() {
 
 }
 
-func renderTemplate(w http.ResponseWriter, name string, p page) {
+func renderTemplate(w http.ResponseWriter, name string, data interface{}) {
 	buf := bufpool.Get()
-	err := templates.ExecuteTemplate(buf, name, p)
+	err := templates.ExecuteTemplate(buf, name, data)
 	check(err, "An error occurred processing this page.")
 
 	w.Header().Set("Content-Type", "text/html")
@@ -126,9 +130,10 @@ func setup(c appengine.Context, r *http.Request) page {
 	check(err, "Couldn't load session.")
 
 	if p.Session.Values["Username"] != nil {
-		p.User, err = getUser(c, p.Session.Values["Username"].(string))
-		p.LoggedIn = true
+		p.User, err = GetUser(c, p.Session.Values["Username"].(string))
 		check(err, "Could not load your user profile.")
+
+		p.LoggedIn = true
 	} else {
 		p.LoggedIn = false
 	}

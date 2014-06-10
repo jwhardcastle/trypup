@@ -3,6 +3,7 @@
 package app
 
 import (
+	"log"
 	"time"
 
 	"appengine"
@@ -31,7 +32,28 @@ func NewComment(c appengine.Context, body string, owner *User, parent Votable) *
 	comment.OwnerKey = owner.userKey
 	comment.parent = parent
 	comment.ParentKey = parent.Key()
+	comment.DateCreated = time.Now()
+	comment.Score = 1
+	comment.Upvotes = 1
 	comment.Save(c)
+
+	// The submitter automatically upvotes the new comment
+	NewVote(c, owner, comment, 1)
+
+	return comment
+}
+
+func GetComment(c appengine.Context, intID int64) Comment {
+	var comment Comment
+
+	log.Print("ID:")
+	log.Print(intID)
+
+	key := datastore.NewKey(c, "Comment", "", intID, nil)
+	err := datastore.Get(c, key, &comment)
+	check(err, "Could not find comment.")
+
+	comment.commentKey = key
 
 	return comment
 }
@@ -45,6 +67,10 @@ func (comment *Comment) Save(c appengine.Context) error {
 	(*comment).commentKey, err = datastore.Put(c, (*comment).commentKey, comment)
 
 	return err
+}
+
+func (comment *Comment) AddComment(c appengine.Context, body string, owner *User) *Comment {
+	return NewComment(c, body, owner, comment)
 }
 
 func (comment *Comment) CountVotes(c appengine.Context) {
@@ -124,4 +150,9 @@ func (comment Comment) Owner() User {
 
 func (comment Comment) Children() []*Comment {
 	return comment.children
+}
+
+// Take the IntID and convert it to base36 for use in URLs, etc.
+func (comment Comment) URLID() string {
+	return to36(comment.commentKey.IntID())
 }

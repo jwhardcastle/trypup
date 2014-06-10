@@ -41,14 +41,7 @@ func ItemHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	id := vars["id"]
-	intID := decodeID(id)
-	key := datastore.NewKey(c, "Item", "", intID, nil)
-
-	var item Item
-	err := datastore.Get(c, key, &item)
-	check(err, "Could not load item.")
-
-	item.itemKey = key
+	item := GetItem(c, decodeID(id))
 	item.loadOwner(c)
 	item.loadComments(c)
 
@@ -71,7 +64,7 @@ func LoginHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	if len(r.PostForm) > 0 {
 		log.Print(r.PostForm)
 		if len(r.PostForm["Username"][0]) > 0 {
-			user, err := getUser(c, r.PostForm["Username"][0])
+			user, err := GetUser(c, r.PostForm["Username"][0])
 			if err != nil {
 				p.Session.AddFlash("Could not find that username.")
 
@@ -119,10 +112,32 @@ func UserHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	username := vars["username"]
-	user, err := getUser(c, username) // TODO: do an actual lookup
+	user, err := GetUser(c, username) // TODO: do an actual lookup
 	check(err, "A user with that name could not be found.")
 
 	p.Data["User"] = user
 
 	renderTemplate(w, "user.html", p)
+}
+
+func AddComment(c appengine.Context, w http.ResponseWriter, r *http.Request) {
+	p := setup(c, r)
+
+	body := r.PostFormValue("b")
+	parent := decodeID(r.PostFormValue("p"))
+	parentType := r.PostFormValue("pt")
+
+	log.Print(p.User.Username)
+
+	var newComment *Comment
+
+	if parentType == "i" {
+		item := GetItem(c, parent)
+		newComment = item.AddComment(c, body, &p.User)
+	} else {
+		comment := GetComment(c, parent)
+		newComment = comment.AddComment(c, body, &p.User)
+	}
+
+	renderTemplate(w, "_comment.html", newComment)
 }

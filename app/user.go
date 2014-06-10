@@ -36,6 +36,7 @@ func NewUser(c appengine.Context, username string, password string) *User {
 	if len(password) > 0 {
 		user.setPassword(password)
 	}
+	user.DateCreated = time.Now()
 	user.userKey = datastore.NewKey(c, "User", username, 0, nil)
 	user.Save(c)
 	return user
@@ -49,19 +50,21 @@ func (user *User) Save(c appengine.Context) error {
 }
 
 // Return the specified user from the datastore
-func getUser(c appengine.Context, username string) (User, error) {
-	user := new(User)
+func GetUser(c appengine.Context, username string) (User, error) {
+	var user User
 
 	if len(username) == 0 {
-		return *user, errors.New("Username can't be blank.")
+		return user, errors.New("Username can't be blank.")
 	}
 
 	k := datastore.NewKey(c, "User", username, 0, nil)
 
-	err := datastore.Get(c, k, user)
-	//check(err, "Could not load user profile for " + username + ".")
+	err := datastore.Get(c, k, &user)
+	check(err, "Could not load user profile for "+username+".")
 
-	return *user, err
+	user.userKey = k
+
+	return user, err
 }
 
 // Set the user's password

@@ -58,6 +58,18 @@ func NewItem(c appengine.Context, title string, description string, icon string,
 	return item
 }
 
+func GetItem(c appengine.Context, intID int64) Item {
+	var item Item
+
+	key := datastore.NewKey(c, "Item", "", intID, nil)
+	err := datastore.Get(c, key, &item)
+	check(err, "Could not find item.")
+
+	item.itemKey = key
+
+	return item
+}
+
 func (item *Item) Save(c appengine.Context) error {
 	if (*item).itemKey == nil {
 		item.itemKey = datastore.NewIncompleteKey(c, "Item", nil)
@@ -65,6 +77,10 @@ func (item *Item) Save(c appengine.Context) error {
 	var err error
 	(*item).itemKey, err = datastore.Put(c, (*item).itemKey, item)
 	return err
+}
+
+func (item *Item) AddComment(c appengine.Context, body string, owner *User) *Comment {
+	return NewComment(c, body, owner, item)
 }
 
 func (item *Item) loadComments(c appengine.Context) {
