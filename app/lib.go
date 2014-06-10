@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/mjibson/appstats"
+	"github.com/oxtoacart/bpool"
 
 	"appengine"
 	"appengine/datastore"
@@ -43,6 +44,13 @@ type Votable interface {
 type AppHandler struct {
 	f appstats.Handler
 }
+
+/* Global objects used in the processing of each page */
+// BufferPool used to hang on to buffers and save on garbage collection
+var bufpool *bpool.BufferPool
+
+// Templates
+var templates *template.Template
 
 func NewAppHandler(f func(appengine.Context, http.ResponseWriter, *http.Request)) AppHandler {
 	return AppHandler{
@@ -81,10 +89,7 @@ func check(err error, message string) {
 	}
 }
 
-// Make sure we're ready to go, with Content-Type and more
-func setup(c appengine.Context, w http.ResponseWriter, r *http.Request) (*template.Template, page) {
-	w.Header().Set("Content-Type", "text/html")
-
+func initTemplates() {
 	defer func() {
 		if recv := recover(); recv != nil {
 			err := recv.(error)
@@ -92,9 +97,24 @@ func setup(c appengine.Context, w http.ResponseWriter, r *http.Request) (*templa
 		}
 	}()
 
-	templates := template.Must(template.New("").Funcs(template.FuncMap{
+	templates = template.Must(template.New("").Funcs(template.FuncMap{
 	//"printFlashes": printFlashes,
 	}).ParseGlob("app/view/*.html"))
+
+}
+
+func renderTemplate(w http.ResponseWriter, name string, p page) {
+	buf := bufpool.Get()
+	err := templates.ExecuteTemplate(buf, name, p)
+	check(err, "An error occurred processing this page.")
+
+	w.Header().Set("Content-Type", "text/html")
+	buf.WriteTo(w)
+	bufpool.Put(buf)
+}
+
+// Make sure we're ready to go, with Content-Type and more
+func setup(c appengine.Context, r *http.Request) page {
 
 	var p page
 	var err error
@@ -111,7 +131,7 @@ func setup(c appengine.Context, w http.ResponseWriter, r *http.Request) (*templa
 	}
 	p.Flashes = p.Session.Flashes()
 
-	return templates, p
+	return p
 }
 
 // Shamelessly stolen from Reddit, ported to Go

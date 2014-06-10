@@ -1,8 +1,6 @@
-// A sample front page to get started
 package app
 
 import (
-	"bytes"
 	"log"
 	"net/http"
 
@@ -19,7 +17,7 @@ func DummyHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 
 // Show the front page
 func RootHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
-	templates, p := setup(c, w, r)
+	p := setup(c, r)
 
 	var items []Item
 	q := datastore.NewQuery("Item").Order("-Score")
@@ -33,15 +31,12 @@ func RootHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 
 	p.Data = append(p.Data, items)
 
-	var b bytes.Buffer
-
-	err = templates.ExecuteTemplate(&b, "index.html", p)
-	check(err, "Could not process template.")
-	b.WriteTo(w)
+	renderTemplate(w, "index.html", p)
 }
 
+// The detail page for a specific item
 func ItemHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
-	templates, p := setup(c, w, r)
+	p := setup(c, r)
 
 	vars := mux.Vars(r)
 
@@ -51,30 +46,20 @@ func ItemHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 
 	var item Item
 	err := datastore.Get(c, key, &item)
-	//var items []Item
-	//keys, err := q.GetAll(c, &items)
 	check(err, "Could not load item.")
 
-	/*
-		items[0].itemKey = keys[0]
-		items[0].loadOwner(c)
-		items[0].loadComments(c)
-	*/
 	item.itemKey = key
 	item.loadOwner(c)
 	item.loadComments(c)
 
 	p.Data = append(p.Data, item)
 
-	var b bytes.Buffer
-
-	err = templates.ExecuteTemplate(&b, "item.html", p)
-	check(err, "Could not process template.")
-	b.WriteTo(w)
+	renderTemplate(w, "item.html", p)
 }
 
+// Allow a user to login to the site
 func LoginHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
-	templates, p := setup(c, w, r)
+	p := setup(c, r)
 
 	err := r.ParseForm()
 	check(err, "Could not process login information.")
@@ -121,25 +106,19 @@ func LoginHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var b bytes.Buffer
-	err = templates.ExecuteTemplate(&b, "login.html", p)
-	b.WriteTo(w)
+	renderTemplate(w, "login.html", p)
 }
 
+// Show the detail page for a user, with their submitted items, etc.
 func UserHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
-	templates, p := setup(c, w, r)
+	p := setup(c, r)
 
 	vars := mux.Vars(r)
 	username := vars["username"]
 	user, err := getUser(c, username) // TODO: do an actual lookup
-
 	check(err, "A user with that name could not be found.")
 
 	p.Data = append(p.Data, user)
 
-	var b bytes.Buffer
-
-	err = templates.ExecuteTemplate(&b, "user.html", p)
-	check(err, "Could not process template.")
-	b.WriteTo(w)
+	renderTemplate(w, "user.html", p)
 }
