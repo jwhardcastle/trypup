@@ -27,7 +27,7 @@ type page struct {
 	User     User
 	Title    string
 	Session  *sessions.Session
-	Data     []interface{}
+	Data     map[string]interface{}
 	Flashes  []interface{}
 }
 
@@ -63,7 +63,10 @@ func (a AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if recv := recover(); recv != nil {
 
-			e := recv.(*appError)
+			e, ok := recv.(*appError)
+			if !ok {
+				e = &appError{recv.(error), "A serious error occurred.", 500}
+			}
 
 			log.Print(e.Error)
 
@@ -130,6 +133,8 @@ func setup(c appengine.Context, r *http.Request) page {
 		p.LoggedIn = false
 	}
 	p.Flashes = p.Session.Flashes()
+
+	p.Data = make(map[string]interface{})
 
 	return p
 }

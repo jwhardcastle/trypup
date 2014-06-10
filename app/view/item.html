@@ -1,5 +1,5 @@
 {{ template "header" . }}
-	{{ range .Data }}
+	{{ with .Data.Item }}
 		{{ template "_item" . }}
 
 		<div class="comments">

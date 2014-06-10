@@ -2,10 +2,8 @@
         
 	<div id="map"></div>
 		
-		{{range .Data}}
-			{{ range . }}
-				{{ template "_item" . }}
-			{{ end }}
+		{{range .Data.Items}}
+			{{ template "_item" . }}
 		{{end}}
 	
 	</div>

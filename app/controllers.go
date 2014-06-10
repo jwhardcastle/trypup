@@ -29,7 +29,7 @@ func RootHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 		items[i].loadOwner(c)
 	}
 
-	p.Data = append(p.Data, items)
+	p.Data["Items"] = items
 
 	renderTemplate(w, "index.html", p)
 }
@@ -52,7 +52,7 @@ func ItemHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	item.loadOwner(c)
 	item.loadComments(c)
 
-	p.Data = append(p.Data, item)
+	p.Data["Item"] = item
 
 	renderTemplate(w, "item.html", p)
 }
@@ -118,7 +118,7 @@ func UserHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	user, err := getUser(c, username) // TODO: do an actual lookup
 	check(err, "A user with that name could not be found.")
 
-	p.Data = append(p.Data, user)
+	p.Data["User"] = user
 
 	renderTemplate(w, "user.html", p)
 }
