@@ -37,7 +37,7 @@ func dummyData(r *http.Request, c appengine.Context) {
 	u3 := NewUser(c, "rkavalsky", "")
 	u4 := NewUser(c, "teej", "")
 
-	i1 := NewItem(c, "Baltimore Museum of Industry, learn how a linotype works, among the city's industrial hiCstory", "This is a really cool museum that has lots of interesting displays.", "truck", "cadetblue", 39.273556, -76.601806, u1)
+	i1 := NewItem(c, "Baltimore Museum of Industry, learn how a linotype works, among the city's industrial history", "This is a really cool museum that has lots of interesting displays.", "truck", "cadetblue", 39.273556, -76.601806, u1)
 
 	i2 := NewItem(c, "OPACY: Oriole Park at Camden Yards, Home of the Baltimore Orioles", "Camden Yards is the first of the modern \"retro\" stadiums that harkens back to an earlier age of Baseball", "sun-o", "orange", 39.283501, -76.6219798, u2)
 
