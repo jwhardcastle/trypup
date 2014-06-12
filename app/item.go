@@ -141,6 +141,10 @@ func (item Item) Comments() []*Comment {
 	return item.comments
 }
 
+func (item Item) URL() string {
+	return "/share/" + item.URLID() + "/" + item.URLTitle
+}
+
 // Take the IntID and convert it to base36 for use in URLs, etc.
 func (item Item) URLID() string {
 	return to36(item.itemKey.IntID())

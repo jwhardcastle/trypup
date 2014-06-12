@@ -37,6 +37,7 @@ type Commentable interface {
 }
 
 type Votable interface {
+	URL() string
 	Key() *datastore.Key
 	CountVotes(appengine.Context)
 }

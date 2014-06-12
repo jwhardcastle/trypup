@@ -127,8 +127,6 @@ func AddComment(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	parent := decodeID(r.PostFormValue("p"))
 	parentType := r.PostFormValue("pt")
 
-	log.Print(p.User.Username)
-
 	var newComment *Comment
 
 	if parentType == "i" {
@@ -139,5 +137,5 @@ func AddComment(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 		newComment = comment.AddComment(c, body, &p.User)
 	}
 
-	renderTemplate(w, "_comment.html", newComment)
+	renderTemplate(w, "_comment", newComment)
 }

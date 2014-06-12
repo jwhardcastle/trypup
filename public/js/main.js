@@ -1,6 +1,3 @@
-var map = L.map('map').setView([39.2847064,-76.620486], 11);
-var markers = new L.MarkerClusterGroup({disableClusteringAtZoom: 10,});
-
 function mapItems() {
 	$('.item').each(function(i) {
 		elm = $(this);
@@ -20,36 +17,70 @@ function mapItems() {
 	});
 }
 
+function reply(id) {
+	$('#tools'+id).hide();
+	$('#reply'+id).show();
+}
+
 function highlight(id) {
 	$('.item').removeClass('highlight');
 	$('#item'+id).addClass('highlight');
 }
 
 $(document).ready(function() {
-	// add an OpenStreetMap tile layer
-	//L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+	$(".commentform").submit(function (event) {
+		event.preventDefault();
 
-	// add a MapQuest tile layer
-	L.tileLayer('http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.jpg', {
-	    subdomains: '1234',
-	    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-	}).addTo(map);
+		var url = $(this).attr('action');
+		var comments = $(this).siblings(".comments");
 
-	map.addLayer(markers);
+		$.ajax({
+		   type: "POST",
+		   url: url,
+		   data: $(this).serialize(),
+		   success: function(data) {
+			comments.prepend(data);
+		   }
+		 });
 
-	/*map.on('popupopen', function(e) {
-		console.log(e); // e is an event object (MouseEvent in this case)
-	});*/
-
-	markers.on('click', function (d) {
-		var item_id = d.layer.options.item_id;
-		
-		if ( $('#item'+item_id) ){
-			highlight(item_id);
-		}
 	});
 
-	mapItems();
+	$(".reply").click(function (event) {
+		event.preventDefault();
+
+		id = $(this).data('id');
+		reply(id);
+	});	
+	
+	if($('#map').length) {
+		var map = L.map('map').setView([39.2847064,-76.620486], 11);
+		var markers = new L.MarkerClusterGroup({disableClusteringAtZoom: 10,});
+
+		// add an OpenStreetMap tile layer
+		//L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+
+		// add a MapQuest tile layer
+		L.tileLayer('http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.jpg', {
+		    subdomains: '1234',
+		    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+		}).addTo(map);
+
+		map.addLayer(markers);
+
+		/*map.on('popupopen', function(e) {
+			console.log(e); // e is an event object (MouseEvent in this case)
+		});*/
+
+		markers.on('click', function (d) {
+			var item_id = d.layer.options.item_id;
+			
+			if ( $('#item'+item_id) ){
+				highlight(item_id);
+			}
+		});
+
+		mapItems();
+	}
 });
 
 

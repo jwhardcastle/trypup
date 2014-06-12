@@ -4,16 +4,23 @@
 	    <a href="/user/{{.Owner.Username}}">{{.Owner.Username}}</a>
 	    {{ .Score }} points (<span class="upv">{{.Upvotes}}</span>|<span class="downv">{{.Downvotes}}</span>)
 	    <div class="body">{{ .Body }}</div>
-	    <form method="POST" action="/comments/new">
+            <div class="tools" id="tools{{.URLID}}">
+		<a href="#" class="reply" data-id="{{.URLID}}">reply</a>
+	    </div>
+	    <form method="POST" action="/comments/new" class="commentform" id="#reply{{.URLID}}">
 		    <textarea name="b"></textarea>
 		    <input type="hidden" name="pt" value="c">
 		    <input type="hidden" name="p" value="{{ .URLID }}">
 		    <input type="submit" value="Reply">
 	    </form>
-	    {{ with .Children }} 
-	    	{{ range .}}
-	    		{{template "_comment" .}}
-	    	{{ end }}
-	    {{ end }}
+	    {{ if .Children }}
+	        <div class="comments" id="comments{{.URLID}}">
+		    {{ with .Children }} 
+			{{ range .}}
+				{{template "_comment" .}}
+			{{ end }}
+		    {{ end }}
+		</div>
+	    {{end}}
 	</div>
 {{ end }}

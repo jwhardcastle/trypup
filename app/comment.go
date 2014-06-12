@@ -20,6 +20,8 @@ type Comment struct {
 	OwnerKey    *datastore.Key
 	parent      Votable
 	ParentKey   *datastore.Key
+	item        *Item
+	ItemKey     *datastore.Key
 	children    []*Comment
 	commentKey  *datastore.Key
 	CommentTree
@@ -32,6 +34,18 @@ func NewComment(c appengine.Context, body string, owner *User, parent Votable) *
 	comment.OwnerKey = owner.userKey
 	comment.parent = parent
 	comment.ParentKey = parent.Key()
+
+	// We want a direct link to the top Item for this tree
+	parentItem, ok := parent.(*Item)
+	if ok {
+		comment.item = parentItem
+		comment.ItemKey = parentItem.Key()
+	} else {
+		parentComment := parent.(*Comment)
+		comment.item = parentComment.item
+		comment.ItemKey = parentComment.ItemKey
+	}
+
 	comment.DateCreated = time.Now()
 	comment.Score = 1
 	comment.Upvotes = 1
@@ -150,6 +164,10 @@ func (comment Comment) Owner() User {
 
 func (comment Comment) Children() []*Comment {
 	return comment.children
+}
+
+func (comment Comment) URL() string {
+	return comment.item.URL() + "/" + comment.URLID()
 }
 
 // Take the IntID and convert it to base36 for use in URLs, etc.

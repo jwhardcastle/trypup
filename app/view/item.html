@@ -1,12 +1,18 @@
 {{ template "header" . }}
 	{{ with .Data.Item }}
 		{{ template "_item" . }}
+	<form method="POST" action="/comments/new" class="commentform" target="_new">
+		<textarea name="b"></textarea>
+		<input type="hidden" name="pt" value="i">
+		<input type="hidden" name="p" value="{{.URLID}}">
+		<input type="submit" value="Reply">
+	</form>
 
-		<div class="comments">
-				{{ range .Comments }}
-					{{ template "_comment" . }}
-				{{ end }}
-		</div>
+	<div class="comments" id="comments{{.URLID}}">
+		{{ range .Comments }}
+			{{ template "_comment" . }}
+		{{ end }}
+	</div>
 
 	{{ end }}
 
