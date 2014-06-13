@@ -69,7 +69,15 @@
 	padding: 0 0.2em;
 }
 
+.item .score .upvote.voted {
+	color: #6c6;
+}
+
 .item .attribution .upv {
+	color: #6c6;
+}
+
+.item .score .downvote.voted {
 	color: #6c6;
 }
 

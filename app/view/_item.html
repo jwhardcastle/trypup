@@ -1,9 +1,9 @@
 {{ define "_item" }}
 	<div class="item" id="{{.URLID}}" data-lat="{{.Lat}}" data-long="{{.Long}}" data-color="{{.Color}}" data-icon="{{.Icon}}">
 		<div class="score">
-			<a href="#" class="upvote">&#9650;</a>
+			<a href="#" class="upvote {{if .Upvoted}}voted{{end}}">&#9650;</a>
 			<span class="overall">{{.Score}}</span>
-			<a href="#" class="downvote">&#9660;</a>
+			<a href="#" class="downvote{{if .Downvoted}}voted{{end}}">&#9660;</a>
 		</div>
 		<div class="details">
 			<a class="title" href="/share/{{.URLID}}/{{.URLTitle}}">{{.Title}}</a>

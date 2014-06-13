@@ -30,6 +30,7 @@ type Item struct {
 	comments []*Comment     `datastore:"-"`
 	itemKey  *datastore.Key `datastore:"-"`
 	CommentTree
+	SessionUserVote int8 `datastore:"-"`
 }
 
 // TODO: shard counters for votes https://developers.google.com/appengine/articles/sharding_counters
@@ -54,7 +55,14 @@ func NewItem(c appengine.Context, title string, description string, icon string,
 
 	item.DateCreated = time.Now()
 
+	// The submitter automatically upvotes the new item
+	item.Score = 1
+	item.Upvotes = 1
+
 	item.Save(c)
+
+	NewVote(c, owner, item, 1)
+
 	return item
 }
 
@@ -122,6 +130,20 @@ func (item *Item) CountVotes(c appengine.Context) {
 	(*item).Upvotes = u
 	(*item).Downvotes = d
 	item.Save(c)
+}
+
+func (item Item) Upvoted() bool {
+	if item.SessionUserVote > 0 {
+		return true
+	}
+	return false
+}
+
+func (item Item) Downvoted() bool {
+	if item.SessionUserVote < 0 {
+		return true
+	}
+	return false
 }
 
 func (item Item) Owner() User {

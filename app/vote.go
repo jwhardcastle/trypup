@@ -1,7 +1,9 @@
 package app
 
 import (
+	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"appengine"
@@ -13,6 +15,7 @@ type Vote struct {
 	OwnerKey    *datastore.Key
 	Parent      Votable `datastore:"-"`
 	ParentKey   *datastore.Key
+	ParentType  string
 	Value       int8           // 1 for upvote, -1 for downvote
 	voteKey     *datastore.Key `datastore:"-"`
 	DateCreated time.Time
@@ -26,6 +29,7 @@ func NewVote(c appengine.Context, owner *User, parent Votable, value int8) *Vote
 	vote.ParentKey = parent.Key()
 	vote.Value = value
 	vote.DateCreated = time.Now()
+	vote.ParentType = strings.Split(reflect.TypeOf(parent).String(), ".")[1] // e.g. Item, Comment, not *app.Comment
 
 	vote.id(c)
 

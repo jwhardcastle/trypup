@@ -24,9 +24,20 @@ func RootHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	keys, err := q.GetAll(c, &items)
 	check(err, "Could not load items.")
 
+	var votes []Vote
+	q = datastore.NewQuery("Vote").Filter("OwnerKey=", p.User.userKey).Filter("ParentType=", "Item")
+	q.GetAll(c, &votes) // Eat the error, we don't care if we can't load votes
+
+	var vote Vote
+
 	for i, key := range keys {
 		items[i].itemKey = key
 		items[i].loadOwner(c)
+		for i, vote = range votes {
+			if items[i].itemKey.IntID() == vote.ParentKey.IntID() {
+				items[i].SessionUserVote = vote.Value
+			}
+		}
 	}
 
 	p.Data["Items"] = items
