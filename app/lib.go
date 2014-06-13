@@ -37,9 +37,15 @@ type Commentable interface {
 }
 
 type Votable interface {
+	URLID() string
 	URL() string
 	Key() *datastore.Key
 	CountVotes(appengine.Context)
+	Upvote(appengine.Context)
+	DeUpvote(appengine.Context)
+	Downvote(appengine.Context)
+	DeDownvote(appengine.Context)
+	Save(appengine.Context) error
 }
 
 // http.Handle doesn't expect you to return an error, but we want to surface them
@@ -71,9 +77,7 @@ func (a AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 
 			log.Print(e.Error)
-			if false {
-				debug.PrintStack()
-			}
+			debug.PrintStack()
 
 			http.StatusText(e.Code)
 			t, err := template.ParseFiles("errors/500.html")

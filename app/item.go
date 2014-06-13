@@ -167,6 +167,26 @@ func (item Item) URL() string {
 	return "/share/" + item.URLID() + "/" + item.URLTitle
 }
 
+func (item *Item) Upvote(c appengine.Context) {
+	item.Score += 1
+	item.Upvotes += 1
+}
+
+func (item *Item) DeUpvote(c appengine.Context) {
+	item.Score -= 1
+	item.Upvotes -= 1
+}
+
+func (item *Item) Downvote(c appengine.Context) {
+	item.Score -= 1
+	item.Downvotes += 1
+}
+
+func (item *Item) DeDownvote(c appengine.Context) {
+	item.Score += 1
+	item.Downvotes -= 1
+}
+
 // Take the IntID and convert it to base36 for use in URLs, etc.
 func (item Item) URLID() string {
 	return to36(item.itemKey.IntID())

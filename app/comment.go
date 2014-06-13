@@ -3,7 +3,6 @@
 package app
 
 import (
-	"log"
 	"time"
 
 	"appengine"
@@ -59,9 +58,6 @@ func NewComment(c appengine.Context, body string, owner *User, parent Votable) *
 
 func GetComment(c appengine.Context, intID int64) Comment {
 	var comment Comment
-
-	log.Print("ID:")
-	log.Print(intID)
 
 	key := datastore.NewKey(c, "Comment", "", intID, nil)
 	err := datastore.Get(c, key, &comment)
@@ -152,6 +148,26 @@ func (comment *Comment) loadChildren(c appengine.Context, recursive bool) {
 	}
 
 	(*comment).children = childs
+}
+
+func (comment *Comment) Upvote(c appengine.Context) {
+	comment.Score += 1
+	comment.Upvotes += 1
+}
+
+func (comment *Comment) DeUpvote(c appengine.Context) {
+	comment.Score -= 1
+	comment.Upvotes -= 1
+}
+
+func (comment *Comment) Downvote(c appengine.Context) {
+	comment.Score -= 1
+	comment.Downvotes += 1
+}
+
+func (comment *Comment) DeDownvote(c appengine.Context) {
+	comment.Score += 1
+	comment.Downvotes -= 1
 }
 
 func (comment Comment) Key() *datastore.Key {

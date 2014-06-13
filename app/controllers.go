@@ -1,8 +1,9 @@
 package app
 
 import (
-	"log"
+	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 
@@ -33,9 +34,11 @@ func RootHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	for i, key := range keys {
 		items[i].itemKey = key
 		items[i].loadOwner(c)
-		for i, vote = range votes {
-			if items[i].itemKey.IntID() == vote.ParentKey.IntID() {
-				items[i].SessionUserVote = vote.Value
+		if len(votes) > 0 {
+			for _, vote = range votes {
+				if items[i].itemKey.IntID() == vote.ParentKey.IntID() {
+					items[i].SessionUserVote = vote.Value
+				}
 			}
 		}
 	}
@@ -73,7 +76,6 @@ func LoginHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	check(err, "Could not process login information.")
 
 	if len(r.PostForm) > 0 {
-		log.Print(r.PostForm)
 		if len(r.PostForm["Username"][0]) > 0 {
 			user, err := GetUser(c, r.PostForm["Username"][0])
 			if err != nil {
@@ -149,4 +151,59 @@ func AddComment(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	renderTemplate(w, "_comment", newComment)
+}
+
+func VoteHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
+	p := setup(c, r)
+
+	value64, err := strconv.ParseInt(r.PostFormValue("v"), 10, 8)
+	value := int8(value64)
+	check(err, "Invalid value.")
+	parentID := decodeID(r.PostFormValue("p"))
+	parentType := r.PostFormValue("pt")
+
+	var parent Votable
+	if parentType == "i" {
+		parentItem := GetItem(c, parentID)
+		parent = &parentItem
+	} else {
+		parentComment := GetComment(c, parentID)
+		parent = &parentComment
+	}
+
+	var votes []Vote
+	q := datastore.NewQuery("Vote").Filter("OwnerKey=", p.User.userKey).Filter("ParentKey=", parent.Key())
+	keys, err := q.GetAll(c, &votes)
+	check(err, "Couldn't load your upvotes.")
+
+	var vote Vote
+	if len(votes) > 0 {
+		vote = votes[0]
+		vote.voteKey = keys[0]
+		vote.Parent = parent
+		if (&vote).Value == value {
+			// delete the current vote
+			vote.Delete(c)
+			vote.Value = 0
+		} else {
+			// change the value
+			vote.Update(c, value)
+			vote.Save(c)
+		}
+	} else {
+		// create a new vote
+		vote = *NewVote(c, &p.User, parent, value)
+	}
+
+	ret := struct {
+		V  int8   `json:"v"`
+		P  string `json:"p"`
+		PT string `json:"pt"`
+	}{vote.Value, r.PostFormValue("p"), parentType}
+
+	var b []byte
+	b, err = json.Marshal(ret)
+	check(err, "Couldn't format return.")
+
+	w.Write(b)
 }

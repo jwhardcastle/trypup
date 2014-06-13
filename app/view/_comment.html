@@ -1,5 +1,5 @@
 {{ define "_comment" }}
-	<div class="comment">
+	<div class="comment" id="c{{.URLID}}">>
 	    <a href="#" class="collapse">[-]</a>
 	    <a href="/user/{{.Owner.Username}}">{{.Owner.Username}}</a>
 	    {{ .Score }} points (<span class="upv">{{.Upvotes}}</span>|<span class="downv">{{.Downvotes}}</span>)

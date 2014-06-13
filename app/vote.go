@@ -1,6 +1,7 @@
 package app
 
 import (
+	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -54,4 +55,34 @@ func (vote *Vote) Save(c appengine.Context) error {
 	(*vote).voteKey, err = datastore.Put(c, (*vote).voteKey, vote)
 
 	return err
+}
+
+func (vote *Vote) Update(c appengine.Context, newValue int8) error {
+	if vote.Value > 0 && newValue < 0 {
+		log.Print((*vote).Parent)
+		(*vote).Parent.DeUpvote(c)
+	} else if vote.Value < 0 && newValue > 0 {
+		(*vote).Parent.DeDownvote(c)
+	}
+	if newValue > 0 {
+		(*vote).Parent.Upvote(c)
+	} else if newValue < 0 {
+		(*vote).Parent.Downvote(c)
+	}
+
+	(*vote).Parent.Save(c)
+
+	vote.Value = newValue
+	return vote.Save(c)
+}
+
+func (vote *Vote) Delete(c appengine.Context) error {
+	if (*vote).Value == 1 {
+		(*vote).Parent.DeUpvote(c)
+		(*vote).Parent.Save(c)
+	} else {
+		(*vote).Parent.DeDownvote(c)
+		(*vote).Parent.Save(c)
+	}
+	return datastore.Delete(c, (*vote).voteKey)
 }

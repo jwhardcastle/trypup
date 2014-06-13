@@ -1,4 +1,4 @@
-function mapItems() {
+function mapItems(markers) {
 	$('.item').each(function(i) {
 		elm = $(this);
 		// add a marker in the given location, attach some popup content to it and open the popup
@@ -22,9 +22,21 @@ function reply(id) {
 	$('#reply'+id).show();
 }
 
+function vote(t, id, v) {
+	elm = $('#'+t+id)[0];
+	$(elm).find('.vote').removeClass('voted');
+	if(v>0) {
+		$(elm).find('.upvote').addClass('voted');
+	}
+	if(v<0) {
+		$(elm).find('.downvote').addClass('voted');
+	}
+}
+
+
 function highlight(id) {
 	$('.item').removeClass('highlight');
-	$('#item'+id).addClass('highlight');
+	$('#i'+id).addClass('highlight');
 }
 
 $(document).ready(function() {
@@ -51,6 +63,30 @@ $(document).ready(function() {
 		id = $(this).data('id');
 		reply(id);
 	});	
+
+	$(".score .vote").click(function (event) {
+		event.preventDefault();
+		elm = $(this)
+		overall = elm.siblings('.overall')[0];
+		var preSUV = parseInt($(overall).data('suv'));
+		var baseS = parseInt(overall.innerHTML) - preSUV; 
+
+		$.ajax({
+			url: '/vote',
+			method: 'POST',
+			data: {
+				'pt': elm.data('pt'),
+				'p': elm.data('p'),
+				'v': elm.data('v')
+			},
+			dataType: "json",
+			success: function(data) {
+				overall.innerHTML = baseS + data.v;
+				$(overall).data('suv', data.v);
+				vote(data.pt, data.p, data.v);
+			}
+		});
+	});
 	
 	if($('#map').length) {
 		var map = L.map('map').setView([39.2847064,-76.620486], 11);
@@ -79,7 +115,7 @@ $(document).ready(function() {
 			}
 		});
 
-		mapItems();
+		mapItems(markers);
 	}
 });
 

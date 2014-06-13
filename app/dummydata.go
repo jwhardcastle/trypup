@@ -32,10 +32,10 @@ func dummyData(r *http.Request, c appengine.Context) {
 	d, _ = dq.GetAll(c, nil)
 	datastore.DeleteMulti(c, d)
 
-	u1 := NewUser(c, "jwhardcastle", "")
-	u2 := NewUser(c, "jhutton", "")
-	u3 := NewUser(c, "rkavalsky", "")
-	u4 := NewUser(c, "teej", "")
+	u1 := NewUser(c, "jwhardcastle", "password")
+	u2 := NewUser(c, "jhutton", "password")
+	u3 := NewUser(c, "rkavalsky", "password")
+	u4 := NewUser(c, "teej", "password")
 
 	i1 := NewItem(c, "Baltimore Museum of Industry, learn how a linotype works, among the city's industrial history", "This is a really cool museum that has lots of interesting displays.", "truck", "cadetblue", 39.273556, -76.601806, u1)
 
