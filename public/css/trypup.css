@@ -28,19 +28,19 @@
 	padding: 0.7em 0.5em;
 }
 
-.item .score {
+.item .score, .comment .score {
 	font-size: 110%;
 	display: block;
 	float: left;
 	margin-right: 0.5em;
 }
 
-.item .score > * {
+.item .score > *, .comment .score > * {
 	display: block;
 	text-align: center;
 }
 
-.item .score a:link {
+.item .score a, .comment .score > a {
 	text-decoration: none;
 	color: #999;
 	line-height: 0.8;
@@ -69,7 +69,7 @@
 	padding: 0 0.2em;
 }
 
-.item .score .upvote.voted {
+.item .score .upvote.voted, .comment .score .upvote.voted {
 	color: #6c6;
 }
 
@@ -77,7 +77,7 @@
 	color: #6c6;
 }
 
-.item .score .downvote.voted {
+.item .score .downvote.voted, .comment .score .downvote.voted {
 	color: #c66;
 }
 

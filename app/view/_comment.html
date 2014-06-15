@@ -1,9 +1,14 @@
 {{ define "_comment" }}
-	<div class="comment" id="c{{.URLID}}">>
-	    <a href="#" class="collapse">[-]</a>
+	<div class="comment" id="c{{.URLID}}">
+		<div class="score">
+			<a href="#" data-p="{{.URLID}}" data-pt="c" data-v="1" class="vote upvote {{if .Upvoted}}voted{{end}}">&#9650;</a>
+			<span class="overall" data-suv="{{.SessionUserVote}}">{{.Score}}</span>
+			<a href="#" data-p="{{.URLID}}" data-pt="c" data-v="-1" class="vote downvote {{if .Downvoted}}voted{{end}}">&#9660;</a>
+		</div>
+		<a href="#" class="collapse">[-]</a>
 	    <a href="/user/{{.Owner.Username}}">{{.Owner.Username}}</a>
 	    {{ .Score }} points (<span class="upv">{{.Upvotes}}</span>|<span class="downv">{{.Downvotes}}</span>)
-	    <div class="body">{{ .Body }}</div>
+	    <div class="body">{{ .Format }}</div>
             <div class="tools" id="tools{{.URLID}}">
 		<a href="#" class="reply" data-id="{{.URLID}}">reply</a>
 	    </div>

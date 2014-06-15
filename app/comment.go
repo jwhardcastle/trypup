@@ -3,26 +3,31 @@
 package app
 
 import (
+	"html/template"
+	"log"
 	"time"
+
+	"github.com/russross/blackfriday"
 
 	"appengine"
 	"appengine/datastore"
 )
 
 type Comment struct {
-	Body        string
-	DateCreated time.Time
-	Score       int
-	Upvotes     int
-	Downvotes   int
-	owner       *User
-	OwnerKey    *datastore.Key
-	parent      Votable
-	ParentKey   *datastore.Key
-	item        *Item
-	ItemKey     *datastore.Key
-	children    []*Comment
-	commentKey  *datastore.Key
+	Body            string `datastore:"Body,noindex"`
+	DateCreated     time.Time
+	Score           int
+	Upvotes         int
+	Downvotes       int
+	owner           *User
+	OwnerKey        *datastore.Key
+	parent          Votable
+	ParentKey       *datastore.Key
+	item            *Item
+	ItemKey         *datastore.Key
+	SessionUserVote int8 `datastore:"-"`
+	children        []*Comment
+	commentKey      *datastore.Key
 	CommentTree
 }
 
@@ -48,7 +53,10 @@ func NewComment(c appengine.Context, body string, owner *User, parent Votable) *
 	comment.DateCreated = time.Now()
 	comment.Score = 1
 	comment.Upvotes = 1
-	comment.Save(c)
+	err := comment.Save(c)
+	check(err, "Couldn't save your comment.")
+
+	log.Print("New Comment:", comment.Key())
 
 	// The submitter automatically upvotes the new comment
 	NewVote(c, owner, comment, 1)
@@ -71,6 +79,7 @@ func GetComment(c appengine.Context, intID int64) Comment {
 func (comment *Comment) Save(c appengine.Context) error {
 	if (*comment).commentKey == nil {
 		(*comment).commentKey = datastore.NewIncompleteKey(c, "Comment", nil)
+		log.Print("New comment key", (*comment).commentKey)
 	}
 
 	var err error
@@ -103,6 +112,25 @@ func (comment *Comment) CountVotes(c appengine.Context) {
 	(*comment).Upvotes = u
 	(*comment).Downvotes = d
 	comment.Save(c)
+}
+
+func (comment Comment) Upvoted() bool {
+	if comment.SessionUserVote > 0 {
+		return true
+	}
+	return false
+}
+
+func (comment Comment) Downvoted() bool {
+	if comment.SessionUserVote < 0 {
+		return true
+	}
+	return false
+}
+
+func (comment Comment) Format() template.HTML {
+	output := blackfriday.MarkdownBasic([]byte(comment.Body))
+	return template.HTML(string(output))
 }
 
 func loadComment(c appengine.Context, key *datastore.Key, recursive bool) Comment {

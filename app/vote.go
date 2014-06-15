@@ -31,6 +31,7 @@ func NewVote(c appengine.Context, owner *User, parent Votable, value int8) *Vote
 	vote.Value = value
 	vote.DateCreated = time.Now()
 	vote.ParentType = strings.Split(reflect.TypeOf(parent).String(), ".")[1] // e.g. Item, Comment, not *app.Comment
+	log.Print("Vote:", vote)
 
 	vote.id(c)
 
@@ -41,6 +42,9 @@ func NewVote(c appengine.Context, owner *User, parent Votable, value int8) *Vote
 }
 
 func (vote *Vote) id(c appengine.Context) {
+	//log.Print(vote.Owner)
+	log.Print("Parent: ", vote.ParentKey)
+	//return
 	// Construct an ID that ensures each user can only vote once on each Model
 	id := (*vote).Owner.Username + "$$" + strconv.FormatInt(vote.ParentKey.IntID(), 10)
 	(*vote).voteKey = datastore.NewKey(c, "Vote", id, 0, nil)

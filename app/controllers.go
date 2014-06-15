@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -58,6 +59,22 @@ func ItemHandler(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	item := GetItem(c, decodeID(id))
 	item.loadOwner(c)
 	item.loadComments(c)
+
+	var votes []Vote
+	q := datastore.NewQuery("Vote").Filter("OwnerKey=", p.User.userKey).Filter("ParentType=", "Comment")
+	q.GetAll(c, &votes) // Eat the error, we don't care if we can't load votes
+
+	var vote Vote
+
+	for _, comment := range item.Comments() {
+		if len(votes) > 0 {
+			for _, vote = range votes {
+				if comment.commentKey.IntID() == vote.ParentKey.IntID() {
+					comment.SessionUserVote = vote.Value
+				}
+			}
+		}
+	}
 
 	// Since we've already loaded the comments, count 'em up and store for later reference
 	item.CommentTree.Count()
@@ -147,6 +164,7 @@ func AddComment(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 		newComment = item.AddComment(c, body, &p.User)
 	} else {
 		comment := GetComment(c, parent)
+		log.Print("Comment:", comment.Key())
 		newComment = comment.AddComment(c, body, &p.User)
 	}
 
